@@ -3,10 +3,10 @@
     $currentStep = $currentStep ?? 1;
     $stepNames = $stepNames ?? [
         1 => 'Choose Tariff',
-        2 => 'Personal info & payments',
-        3 => 'Insert reward',
-        4 => 'Detail of event',
-        5 => 'Creation of form',
+        2 => 'Personal Info & Payments',
+        3 => 'Insert Reward',
+        4 => 'Detail Of Event',
+        5 => 'Creation Of Form',
     ];
 
     $isCreateRoute = request()->routeIs('voting.create') || request()->routeIs('voting.create.step');
@@ -28,13 +28,13 @@
         <li>
             <a href="{{ route('voting.create.step', ['step' => 1] + (request()->query() ? request()->query() : [])) }}"
                class="tab-btn {{ $isCreateRoute ? 'active-tab' : '' }}">
-                Create a new voting form
+                Create A New Voting Form
             </a>
         </li>
         <li>
             <a href="{{ route('voting.realized') }}"
                class="tab-btn {{ $isRealized ? 'active-tab' : '' }}">
-                Realized voting
+                Realized Voting
             </a>
         </li>
     </ul>

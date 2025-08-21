@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Country;
 use App\Models\Tariff;
 use App\Models\Reward;
@@ -141,14 +142,17 @@ class VotingController extends Controller
             return redirect()->route('voting.create.step', ['step' => $step]);
         }
 
-        // GET: render
+  
         $countries = ($step === 2) ? Country::active()->orderBy('name')->get() : null;
-
+        $booking = Booking::where('user_id',auth()->id())->where('tariff_id',$selectedId)->orderBy('id','desc')->first();
+      
+        // Always pass both variables (tariffs may be null for steps > 1)
         return view('voting.step', [
-            'currentStep'    => $step,
-            'stepNames'      => $stepNames,
-            'tariffs'        => $tariffs,
-            'tariff'         => $selectedTariff ? $selectedTariff->id : $request->query('tariff', null),
+            'currentStep' => $step,
+            'stepNames' => $stepNames,
+            'tariffs' => $tariffs,
+            'booking' => $booking,
+
             'selectedTariff' => $selectedTariff,
             'countries'      => $countries,
         ]);

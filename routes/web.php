@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StripeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
@@ -42,9 +43,11 @@ Route::post('email/resend', [EmailVerificationController::class, 'resend'])
 // Authenticated user routes (dashboard, profile) protected by auth + verified
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard: canonical dashboard route (redirect to the wizard start)
-    Route::get('/dashboard', function () {
-        return redirect()->route('voting.create');
-    })->name('dashboard');
+    // Route::get('/dashboard', function () {
+    //     return redirect()->route('voting.create');
+    // })->name('dashboard');
+
+    Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
 
     // Canonical "create" entrypoint — redirects to step 1
     Route::get('/voting/create', function () {
