@@ -1,0 +1,396 @@
+/* =========================
+   Dashboard Styles (Clean)
+   ========================= */
+
+/* -------------------------
+   Tabs / Header (Improved)
+   ------------------------- */
+.voting-tabs {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    border: none; /* removed underline across both */
+    gap: 1rem;
+}
+
+.tab-btn {
+    position: relative;
+    display: inline-block;
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #444;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.tab-btn:hover {
+    color: #0b9b2a;
+    background: #eef9f0;
+    border-color: #cce3d1;
+}
+
+/* Active tab */
+.tab-btn.active-tab {
+    color: #0b9b2a;
+    background: #ffffff;
+    font-weight: 700;
+    border-color: #0b9b2a;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Professional underline */
+.tab-btn.active-tab::after {
+    content: "";
+    position: absolute;
+    bottom: -10px; /* farther from button */
+    left: 15%; /* leave some gap on sides */
+    right: 15%;
+    height: 4px; /* thicker underline */
+    background: #000; /* black underline */
+    border-radius: 2px;
+}
+
+/* -------------------------
+   Wizard Progress (Steps)
+   ------------------------- */
+.wizard-progress-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar-line {
+    position: absolute;
+    top: 18px; /* Centered better */
+    left: 6%;
+    right: 6%;
+    height: 6px;
+    background: #e0e0e0; /* Darker for visibility */
+    border-radius: 6px;
+    z-index: 0;
+}
+
+.progress-active-line {
+    position: absolute;
+    top: 18px;
+    left: 6%;
+    height: 6px;
+    background: #0b9b2a;
+    border-radius: 6px;
+    z-index: 0;
+    transition: width 0.3s ease;
+}
+
+.progress-labels {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 1;
+}
+
+.progress-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    text-decoration: none;
+    color: #444;
+}
+
+.progress-node .node-number {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.progress-node .node-name {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.progress-node.active .node-number {
+    background: #0b9b2a;
+    border-color: #0b9b2a;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(11, 155, 42, 0.15);
+}
+
+.progress-node.active .node-name {
+    color: #0b9b2a;
+    font-weight: 600;
+}
+
+/* -------------------------
+   Tariff Cards
+   ------------------------- */
+.tariff-card {
+    border: 1px solid #ececec;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.15s ease;
+    box-shadow: 0 6px 16px rgba(16, 24, 40, 0.05);
+    background: #fff;
+}
+
+.tariff-card-compact {
+    min-height: 420px;
+}
+
+.tariff-card .card-header {
+    background: #f8f9fb;
+    border-bottom: 1px solid #eee;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 700;
+}
+
+.tariff-card .card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Price + underline */
+.price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.price-underline {
+    width: 60%;
+    height: 2px;
+    background: #ddd;
+    border-radius: 2px;
+    margin: 0 auto 0.8rem;
+}
+
+/* Features */
+.tariff-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    text-align: left;
+    font-size: 0.92rem;
+    color: #333;
+    width: 100%;
+}
+
+.tariff-features li {
+    margin-bottom: 0.4rem;
+}
+
+/* Selectable states */
+.selectable-card {
+    cursor: pointer;
+}
+
+.selectable-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(16, 24, 40, 0.07);
+}
+
+.selectable-card.selected {
+    border-color: #0b9b2a;
+    box-shadow: 0 14px 36px rgba(11, 155, 42, 0.12);
+}
+
+/* -------------------------
+   Layout Tweaks
+   ------------------------- */
+.row.g-2 {
+    margin-left: -6px;
+    margin-right: -6px;
+}
+
+.row.g-2 > [class*="col-"] {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+@media (max-width: 991.98px) {
+    .tariff-card-compact {
+        min-height: 360px;
+    }
+    .progress-node .node-name {
+        font-size: 0.75rem;
+    }
+    .wizard-progress .progress-bar-line {
+        left: 4%;
+        right: 4%;
+    }
+}
+
+/* -------------------------
+   Current Step Indicator
+   ------------------------- */
+.step-number-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.step-number-circle.active-step {
+    background: #0b9b2a; /* green background */
+    border-color: #0b9b2a;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(11, 155, 42, 0.25);
+}
+.select-btn {
+    min-width: 160px; /* adjust size as you like */
+    text-align: center; /* keep text centered */
+}
+
+/* When card is selected */
+.tariff-card.selected .select-btn {
+    background-color: #0b9b2a; /* green background */
+    color: #fff;
+    border-color: #0b9b2a;
+    min-width: 160px; /* keep same width */
+}
+
+/* On hover when selected */
+.tariff-card.selected .select-btn:hover {
+    background-color: #098a25;
+    border-color: #098a25;
+}
+
+/* -------------------------
+Reward Form & Details Form Styles (Steps 3 & 4)
+------------------------- */
+
+/* fallback for form intro
+ensures intro looks good whether inside or outside the form */
+.form-intro,
+.reward-form .form-intro {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #0f1724;
+    margin-bottom: 0.5rem;
+}
+
+/* shared card wrapper used for both forms */
+.reward-form,
+.details-form {
+    background: linear-gradient(180deg, #ffffff, #fbfcfd);
+    border-radius: 12px;
+    border: 1px solid rgba(16, 24, 40, 0.04);
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+}
+
+.form-intro-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.intro-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #0b9b2a, #077e20);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 6px 18px rgba(11, 155, 42, 0.14);
+}
+
+/* labels & inputs */
+.form-label {
+    font-weight: 700;
+    color: #0f1724;
+    margin-bottom: 8px;
+    display: block;
+}
+.form-control {
+    border: 1px solid #e6edf3;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff;
+}
+.form-control:focus {
+    border-color: #0b9b2a;
+    box-shadow: 0 0 0 0.15rem rgba(11, 155, 42, 0.08);
+}
+
+/* datetime inputs — make sure they're full-width on small screens */
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"] {
+    width: 100%;
+}
+
+/* options list spacing */
+.options-list .option-item .form-control {
+    padding: 10px;
+}
+
+/* Small helper text */
+.text-muted.small {
+    color: #6b7280;
+}
+
+/* actions */
+.d-flex .btn {
+    border-radius: 8px;
+}
+.btn-success {
+    background: linear-gradient(90deg, #0b9b2a, #077e20);
+    color: #fff;
+    border: 0;
+    font-weight: 700;
+}
+.btn-light {
+    background: #fff;
+    border: 1px solid #e6edf3;
+    color: #374151;
+}
+
+/* responsive tweaks */
+@media (max-width: 767.98px) {
+    .form-intro-wrapper {
+        gap: 10px;
+    }
+    .intro-badge {
+        width: 36px;
+        height: 36px;
+    }
+    .reward-form,
+    .details-form {
+        padding: 16px;
+    }
+}
+
+/* small invalid styling (Bootstrap already provides .is-invalid but ensure contrast) */
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: none !important;
+}

@@ -1,0 +1,166 @@
+/* auth.css - used by login/register pages */
+
+/* ---------- base layout (login default) ---------- */
+.form-card {
+    max-width: 420px;
+    margin: 0 auto;
+}
+.form-card .card-body {
+    padding: 20px;
+}
+
+/* If a form-card also has .form-compact (register), it gets larger */
+.form-card.form-compact {
+    max-width: 560px;
+}
+.form-card.form-compact .card-body {
+    padding: 16px;
+}
+
+/* ---------- Shared controls ---------- */
+/* social button base (used for Apple/social buttons) */
+.social-btn {
+    border-radius: 999px;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid #e6e6e6;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    justify-content: center;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+}
+
+/* link hover helper */
+a.link-underline-hover {
+    text-decoration: none;
+    color: inherit;
+}
+a.link-underline-hover:hover {
+    text-decoration: underline;
+}
+
+/* small muted text in signup block */
+.signup-block .small-muted {
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+/* Create account button (outline) */
+.btn-create-account {
+    border-radius: 999px;
+    padding: 0.5rem 0.75rem;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 600;
+    border-color: #0b84ff;
+    color: #0b84ff;
+}
+
+/* Google button style (consistent look across login & register)
+   Prefer using .btn-google along with .social-btn when needed.
+*/
+.btn-google {
+    text-decoration: none;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    background-color: #0b84ff;
+    border-color: #0b84ff;
+}
+.btn-google .btn-google-icon,
+.btn-google-icon {
+    height: 18px;
+    display: inline-block;
+}
+
+/* Button used on register form (primary create account button) */
+.btn-create {
+    background: #0b8b19;
+    border: 1px solid #0b8b19;
+    color: #fff;
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 999px;
+    transition: none;
+}
+.btn-create:hover,
+.btn-create:focus {
+    background: #0b8b19;
+    color: #fff;
+    box-shadow: none;
+}
+
+/* divider used in register page */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #9aa0a6;
+}
+.divider > hr {
+    flex: 1;
+    border: none;
+    height: 1px;
+    background: #e6e6e6;
+}
+
+/* password toggle shared */
+.password-wrapper {
+    position: relative;
+}
+.with-toggle {
+    padding-right: 2.25rem;
+}
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    color: #6c757d;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+}
+.password-toggle svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* responsive tweak */
+@media (max-width: 575.98px) {
+    .form-card {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+/* ---------- Registration-specific compact adjustments ---------- */
+.form-compact h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+.form-compact .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+.form-compact .form-control,
+.form-compact .form-select {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+.form-compact .password-toggle {
+    padding: 0.25rem 0.5rem;
+}
+
+/* Slightly different social button sizing on register compact */
+.form-compact .social-btn {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.9rem;
+}
