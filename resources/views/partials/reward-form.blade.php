@@ -1,79 +1,85 @@
 {{-- resources/views/partials/reward-form.blade.php --}}
 
-<form class="reward-form" method="POST" action="{{ route('voting.create.step', ['step' => $currentStep]) }}" enctype="multipart/form-data" novalidate>
-    @csrf  {{-- CSRF protection retained for when you enable real submit later --}}
+@php
+    // Ensure $currentStep is available (fallback to 3)
+    $currentStep = $currentStep ?? 3;
 
-    {{-- Intro --}}
-    <p class="form-intro">Insert an interesting gift - a voucher for voters.</p>
+    $prev = $currentStep - 1;
+    $prevUrl = $prev >= 1
+        ? route('voting.create.step', ['step' => $prev] + (request()->query() ? request()->query() : []))
+        : route('voting.realized');
 
+    $backLabel = $prev >= 1 ? 'Back' : 'Cancel';
+
+    $bookingId = session('voting.booking_id') ?? old('booking_id') ?? request()->input('booking_id');
+@endphp
+
+@if($bookingId)
+    <input type="hidden" name="booking_id" value="{{ $bookingId }}">
+@endif
+
+<form class="reward-form" method="POST"
+      action="{{ route('voting.create.step', ['step' => $currentStep]) }}"
+      enctype="multipart/form-data" novalidate>
+    @csrf
+
+    {{-- Server flash / status --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    {{-- Name --}}
     <div class="mb-3">
         <label for="reward_name" class="form-label">Name of reward</label>
-        <input type="text" class="form-control" id="reward_name" name="reward_name" required>
+        <input type="text"
+               class="form-control @error('reward_name') is-invalid @enderror"
+               id="reward_name"
+               name="reward_name"
+               required
+               value="{{ old('reward_name') }}">
+        @error('reward_name')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
+    {{-- Description --}}
     <div class="mb-3">
         <label for="reward_description" class="form-label">Describe reward</label>
-        <textarea class="form-control" id="reward_description" name="reward_description" rows="4" required></textarea>
+        <textarea class="form-control @error('reward_description') is-invalid @enderror"
+                  id="reward_description"
+                  name="reward_description"
+                  rows="4">{{ old('reward_description') }}</textarea>
+        @error('reward_description')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
+    {{-- Image --}}
     <div class="mb-3">
         <label for="reward_image" class="form-label">Upload reward (image)</label>
-        <input type="file" class="form-control" id="reward_image" name="reward_image" accept="image/*" required>
+        <input type="file"
+               class="form-control @error('reward_image') is-invalid @enderror"
+               id="reward_image"
+               name="reward_image"
+               accept="image/*">
+        @error('reward_image')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
-    {{-- Wizard actions area --}}
+    {{-- Hidden booking id so controller receives it (if available) --}}
+    @if($bookingId)
+        <input type="hidden" name="booking_id" value="{{ $bookingId }}">
+    @endif
+
+    {{-- actions --}}
     <div class="d-flex justify-content-between mt-4">
-        @php
-            $prev = $currentStep - 1;
-            $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev] + (request()->query() ? request()->query() : [])) : route('voting.realized');
+        <a href="{{ $prevUrl }}" class="btn btn-light">{{ $backLabel }}</a>
 
-            // Build client-side next URL (preserve query string if present)
-            $nextStep = $currentStep + 1;
-            $nextBase = route('voting.create.step', ['step' => $nextStep]);
-            $qs = request()->getQueryString();
-            $nextUrl = $nextBase . ($qs ? ('?' . $qs) : '');
-        @endphp
-
-        <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
-
-        {{-- Changed type to button so it doesn't submit --}}
-        <button type="button" id="rewardNextBtn" class="btn btn-success">Next</button>
+        {{-- Submit the form to save reward and go to next step --}}
+        <button type="submit" class="btn btn-success">Next</button>
     </div>
 </form>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Prevent actual form submission by Enter or other means
-    const form = document.querySelector('.reward-form');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-        });
-
-        // Prevent Enter key submitting the form
-        form.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-                // If you ever want to allow Enter in textarea, check e.target.tagName
-                e.preventDefault();
-            }
-        });
-    }
-
-    // Next button: navigate client-side to next wizard step (preserves query string)
-    const nextBtn = document.getElementById('rewardNextBtn');
-    if (nextBtn) {
-        // nextUrl is injected server-side for correctness
-        const nextUrl = @json($nextUrl);
-        nextBtn.addEventListener('click', function () {
-            // If you want to do client-side validation before navigating, do it here.
-            // Example (simple): require reward_name to be non-empty
-            // const name = document.getElementById('reward_name').value.trim();
-            // if (!name) { alert('Please enter reward name'); return; }
-
-            window.location.href = nextUrl;
-        });
-    }
-});
-</script>
-@endpush

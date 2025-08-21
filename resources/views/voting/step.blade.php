@@ -39,23 +39,23 @@
                         @include('partials.tariff-cards', ['tariffs' => $tariffs, 'selectedTariff' => $selectedTariff ?? null])
                     @elseif($currentStep === 2)
                         {{-- STEP 3: Insert reward --}}
+
                         <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>
                         @if(!$booking)
                             @include('partials.personal-info-payment', ['selectedTariff' => $selectedTariff ?? null, 'currentStep' => $currentStep])
                         @else
                             @include('partials.payment-successfull')
                         @endif
+
                     @elseif($currentStep === 3)
                         {{-- STEP 3: Insert reward --}}
-                        <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>
                         @include('partials.reward-form', ['selectedTariff' => $selectedTariff ?? null])
                     @elseif($currentStep === 4)
                         {{-- STEP 4: Detail of event --}}
-                        <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>
+                        
                         @include('partials.details-form', ['selectedTariff' => $selectedTariff ?? null])
                     @else
                         {{-- STEP 5: Creation of form (placeholder) --}}
-                        <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>
                         <div class="mb-3">
                             <p class="text-muted">This is a placeholder for step {{ $currentStep }}. Replace with the actual form/content for this step.</p>
                             @if($selectedTariff)

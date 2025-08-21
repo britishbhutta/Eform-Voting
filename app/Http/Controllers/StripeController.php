@@ -9,9 +9,8 @@ use Validator;
 
 class StripeController extends Controller
 {
-    public function store(Request $request){
-        // echo 'here';
-        // dd($request->all());
+    public function store(Request $request)
+    {
         $rules = [
             'stripeToken'   => 'required|string',
             
@@ -19,7 +18,7 @@ class StripeController extends Controller
             // Billing info
             'email'         => 'required|email',
             'phone_number'  => 'nullable|string|max:20',
-            'invoice_issued'=> 'nullable|boolean',
+            'invoice_issued' => 'nullable|boolean',
             'company_name'  => 'required_if:invoice_issued,1|string|max:255',
             'company_id'    => 'required_if:invoice_issued,1|string|max:255',
             'tax_vat'       => 'nullable|string|max:50',
@@ -40,6 +39,7 @@ class StripeController extends Controller
             ], 422);
         }
 
+
         $selectedTariff = Tariff::find($request->selectedTariffId);
 
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
@@ -53,6 +53,7 @@ class StripeController extends Controller
         $booking = new Booking;
         $booking->tariff_id        = $request->selectedTariffId; 
         $booking->user_id          = auth()->id(); 
+
         $booking->email            = $validated['email'];
         $booking->phone            = $validated['phone_number'] ?? null;
         $booking->company          = $validated['company_name'] ?? null;
@@ -63,19 +64,23 @@ class StripeController extends Controller
         $booking->city             = $validated['city'];
         $booking->zip              = $validated['zip'];
         $booking->country          = $validated['country'];
+
         $booking->booking_reference = strtoupper(uniqid('BOOK-')); 
         $booking->price            = $selectedTariff->price_cents / 100;
         $booking->currency         = $selectedTariff->currency;
         $booking->transaction_id   = $charge->id; 
         $booking->payment_status   = $charge->status; 
+
         $booking->payment_method   = 'stripe';
         $booking->save();
 
+        // IMPORTANT: store booking id in session so step 3 (reward) can pick it up
+        session(['voting.booking_id' => $booking->id]);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Payment processed successfully!'
+            'message' => 'Payment processed successfully!',
+            'booking_id' => $booking->id,
         ]);
-
-        
     }
 }

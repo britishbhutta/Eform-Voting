@@ -28,8 +28,17 @@ class Booking extends Model
         'is_completed',
         'booking_status',
     ];
+
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id','id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    /**
+     * One-to-one relationship: a booking has one reward.
+     */
+    public function reward()
+    {
+        return $this->hasOne(Reward::class, 'booking_id', 'id');
     }
 }
