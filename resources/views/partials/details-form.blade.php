@@ -4,14 +4,7 @@
 <form class="details-form reward-form" method="POST" action="{{ route('voting.create.step', ['step' => $currentStep]) }}" enctype="multipart/form-data" novalidate>
     @csrf
 
-    {{-- Intro (uses same visual style as step 3) --}}
-    <div class="form-intro-wrapper d-flex align-items-start gap-3 mb-3">
-        <div class="intro-badge">4</div>
-        <div>
-            <p class="form-intro mb-1">Detail of event — set the voting period and question.</p>
-            <p class="text-muted small mb-0">Provide a clear question and up to 4 answer options. Make sure the date & time are correct.</p>
-        </div>
-    </div>
+    
 
     <div class="mb-3">
         <label for="form_name" class="form-label">Name of voting form</label>
