@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Booking extends Model
 {
     protected $fillable = [
+        'tariff_id',
         'user_id',
         'email',
         'phone',
@@ -24,6 +25,8 @@ class Booking extends Model
         'transaction_id',
         'payment_status',
         'payment_method',
+        'is_completed',
+        'booking_status',
     ];
     public function user()
     {

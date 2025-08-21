@@ -8,7 +8,7 @@
         @include('partials.voting-tabs')
 
         <div class="card">
-            <div class="card-body text-center py-5">
+            <div class="card-body text-center">
                 @if(!empty($votings) && count($votings))
                     <div class="row">
                         @foreach($votings as $v)
@@ -22,9 +22,41 @@
                         @endforeach
                     </div>
                 @else
-                    
-                    <h4>No voting forms yet</h4>
-                    <p class="text-muted">Click <strong>Create a new voting form</strong> to start building your first poll.</p>
+                    <div class="container my-5">
+                        <h3 class="mb-4">Voting Results</h3>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                <th>Date</th>
+                                <th>Name of voting form</th>
+                                <th>Result</th>
+                                <th>File with email</th>
+                                <th>Tarif</th>
+                                <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                <td>8.7.2024</td>
+                                <td>Player of the match 1st round</td>
+                                <td>Rolando 80%, Messi 20%</td>
+                                <td><a href="play1.csv" download>play1.csv</a></td>
+                                <td>extra</td>
+                                <td>Completed</td>
+                                </tr>
+                                <tr>
+                                <td>9.7.2024</td>
+                                <td>Player of the match 2st round</td>
+                                <td>Rolando 60%, Messi 40%</td>
+                                <td><a href="play2.csv" download>play2.csv</a></td>
+                                <td>extra</td>
+                                <td>Completed</td>
+                                </tr>
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>

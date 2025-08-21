@@ -14,11 +14,11 @@
     @endif
 
 <div class="container mt-3">
-    <div id="payment-form-container" class="{{ (auth()->user()->booking && auth()->user()->booking->payment_status === 'succeeded') ? 'd-none' : 'd-block' }}">
+    <div id="payment-form-container">
         <form action="{{ route('stripe.payment') }}" id="stripe-form" method="POST">
             @csrf
             <input type="hidden" name="stripeToken" id="stripe-token">
-            <input type="hidden" name="payableAmount" id="payableAmount" value="{{ $selectedTariff ? ($selectedTariff->price_cents / 100) : '' }}">
+            <input type="hidden" name="selectedTariffId" value="{{ $selectedTariff->id }}">
             <!-- <input type="hidden" name="payableAmount" id="payableAmount" value="2300"> -->
             <div class="row">
             <div class="col-md-6">
@@ -181,7 +181,7 @@
             </div>
         </form>
     </div>
-    <div id="payment-success" class="text-center {{ (auth()->user()->booking && auth()->user()->booking->payment_status === 'succeeded') ? 'd-block' : 'd-none' }}">
+    <div id="payment-success" class="text-center d-none }}">
         <div class="d-flex justify-content-center align-items-center flex-column">
             <div class="rounded-circle bg-success d-flex justify-content-center align-items-center"
                 style="width:120px; height:120px;">
@@ -206,12 +206,7 @@
     <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
 
     {{-- Changed type to button so it doesn't submit --}}
-    <button type="button" id="rewardNextBtn" class="btn btn-success"
-    @if(!(auth()->user()->booking && auth()->user()->booking->payment_status === 'succeeded')) 
-        disabled 
-    @endif>
-    Next
-</button>
+    <button type="button" id="rewardNextBtn" class="btn btn-success" disabled>Next</button>
 </div>
 
 <script src="https://js.stripe.com/v3/"></script>

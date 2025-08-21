@@ -40,7 +40,11 @@
                     @elseif($currentStep === 2)
                         {{-- STEP 3: Insert reward --}}
                         <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>
-                        @include('partials.personal-info-payment', ['selectedTariff' => $selectedTariff ?? null, 'currentStep' => $currentStep])
+                        @if(!$booking)
+                            @include('partials.personal-info-payment', ['selectedTariff' => $selectedTariff ?? null, 'currentStep' => $currentStep])
+                        @else
+                            @include('partials.payment-successfull')
+                        @endif
                     @elseif($currentStep === 3)
                         {{-- STEP 3: Insert reward --}}
                         <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>

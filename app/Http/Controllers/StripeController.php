@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Tariff;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -13,7 +14,7 @@ class StripeController extends Controller
         // dd($request->all());
         $rules = [
             'stripeToken'   => 'required|string',
-            'payableAmount' => 'required|numeric|min:1',
+            
 
             // Billing info
             'email'         => 'required|email',
@@ -39,15 +40,18 @@ class StripeController extends Controller
             ], 422);
         }
 
+        $selectedTariff = Tariff::find($request->selectedTariffId);
+
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
         $charge = $stripe->charges->create([
-        'amount' => $request->payableAmount *100,
-        'currency' => 'eur',
+        'amount' => $selectedTariff->price_cents,
+        'currency' => $selectedTariff->currency,
         'source' => $request->stripeToken,
         ]);
 
         $validated = $validator->validated();
         $booking = new Booking;
+        $booking->tariff_id        = $request->selectedTariffId; 
         $booking->user_id          = auth()->id(); 
         $booking->email            = $validated['email'];
         $booking->phone            = $validated['phone_number'] ?? null;
@@ -60,8 +64,8 @@ class StripeController extends Controller
         $booking->zip              = $validated['zip'];
         $booking->country          = $validated['country'];
         $booking->booking_reference = strtoupper(uniqid('BOOK-')); 
-        $booking->price            = $validated['payableAmount'];
-        $booking->currency         = 'EUR';
+        $booking->price            = $selectedTariff->price_cents / 100;
+        $booking->currency         = $selectedTariff->currency;
         $booking->transaction_id   = $charge->id; 
         $booking->payment_status   = $charge->status; 
         $booking->payment_method   = 'stripe';

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Country;
 use App\Models\Tariff;
 use Illuminate\Http\Request;
@@ -59,12 +60,14 @@ class VotingController extends Controller
                 return redirect()->route('voting.create.step', ['step' => 1])->with('error', 'Please select a tariff first.');
             }
         }
- 
+        $booking = Booking::where('user_id',auth()->id())->where('tariff_id',$selectedId)->orderBy('id','desc')->first();
+      
         // Always pass both variables (tariffs may be null for steps > 1)
         return view('voting.step', [
             'currentStep' => $step,
             'stepNames' => $stepNames,
             'tariffs' => $tariffs,
+            'booking' => $booking,
             'selectedTariff' => $selectedTariff,
             'countries'   => $step == 2 ? Country::all() : null,
         ]);
