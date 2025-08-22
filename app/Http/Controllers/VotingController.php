@@ -6,26 +6,24 @@ use App\Models\Country;
 use App\Models\Tariff;
 use App\Models\Reward;
 use App\Models\Booking;
+use App\Models\VotingEvent;
+use App\Models\VotingEventOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class VotingController extends Controller
 {
-    /**
-     * Show realized votings (list).
-     */
+
     public function realized(Request $request)
     {
         $votings = []; // placeholder
         return view('voting.realized', compact('votings'));
     }
 
-    /**
-     * Generic step handler for the creation wizard (GET -> render, POST -> handle form).
-     *
-     * Route: GET|POST /voting/create/step/{step}
-     */
     public function step(Request $request, $step)
     {
         $step = (int) $step;
@@ -42,17 +40,15 @@ class VotingController extends Controller
             abort(404);
         }
 
-        // Load selected tariff id from session (if any) and the tariff model
         $selectedId = session('voting.selected_tariff', null);
         $selectedTariff = $selectedId ? Tariff::find($selectedId) : null;
 
-        if ($selectedId && !$selectedTariff) {
+        if ($selectedId && ! $selectedTariff) {
             session()->forget('voting.selected_tariff');
             $selectedId = null;
             $selectedTariff = null;
         }
 
-        // Step 1 shows tariffs
         $tariffs = null;
         if ($step === 1) {
             $tariffs = Tariff::orderBy('price_cents', 'asc')->get();
@@ -63,9 +59,8 @@ class VotingController extends Controller
             }
         }
 
-        // POST handling
         if ($request->isMethod('post')) {
-            // STEP 1 POST: select tariff
+
             if ($step === 1 && $request->filled('tariff')) {
                 $validated = $request->validate([
                     'tariff' => 'required|exists:tariffs,id',
@@ -76,7 +71,6 @@ class VotingController extends Controller
                 return redirect()->route('voting.create.step', ['step' => 2]);
             }
 
-            // STEP 3 POST: reward creation / update
             if ($step === 3) {
                 $validator = Validator::make($request->all(), [
                     'reward_name'        => ['required', 'string', 'max:255'],
@@ -89,55 +83,118 @@ class VotingController extends Controller
                     return back()->withErrors($validator)->withInput();
                 }
 
-                // Build payload for Reward model
                 $payload = [
                     'name'        => $request->input('reward_name'),
                     'description' => $request->input('reward_description'),
                 ];
 
-                // Store file if provided
                 if ($request->hasFile('reward_image')) {
                     $path = $request->file('reward_image')->store('rewards', 'public');
                     $payload['image'] = $path;
                 }
 
-                // Determine booking id (from request or session)
                 $bookingId = $request->input('booking_id') ?: session('voting.booking_id');
 
-                if ($bookingId) {
-                    $booking = Booking::find($bookingId);
 
-                    if (! $booking) {
-                        return back()->with('error', 'Booking not found.')->withInput();
+                if (! $bookingId && Auth::check()) {
+                    $latestBooking = Booking::where('user_id', Auth::id())
+                        ->orderByDesc('created_at')
+                        ->first();
+                    if ($latestBooking) {
+                        $bookingId = $latestBooking->id;
                     }
-
-                    // Try to find an existing reward for this booking
-                    $existingReward = $booking->reward; // uses hasOne -> returns Reward or null
-
-                    if ($existingReward) {
-                        $existingReward->fill($payload);
-                        $existingReward->save();
-                        $reward = $existingReward;
-                    } else {
-                        // Create new reward linked to booking via relationship (booking_id will be set)
-                        $reward = $booking->reward()->create($payload);
-                    }
-
-                    // ensure session stores booking id for later steps
-                    session(['voting.booking_id' => $booking->id]);
-
-                    return redirect()->route('voting.create.step', ['step' => 4])
-                        ->with('success', 'Reward saved successfully.');
                 }
 
-                // No bookingId: create a standalone reward (booking_id left null)
-                $reward = Reward::create($payload);
+
+                if (! $bookingId) {
+                    return back()->with('error', 'No booking found. Please complete payment or select a booking before saving a reward.')->withInput();
+                }
+
+                $booking = Booking::find($bookingId);
+                if (! $booking) {
+                    return back()->with('error', 'Booking not found.')->withInput();
+                }
+
+
+                try {
+                    $reward = Reward::updateOrCreate(
+                        ['booking_id' => $booking->id],
+                        $payload
+                    );
+                } catch (\Throwable $e) {
+                    Log::error('Failed to create/update reward: ' . $e->getMessage());
+                    return back()->with('error', 'Unable to save reward. Please try again.')->withInput();
+                }
+
+                session(['voting.booking_id' => $booking->id]);
 
                 return redirect()->route('voting.create.step', ['step' => 4])
                     ->with('success', 'Reward saved successfully.');
             }
 
-            // default POST redirect back to step
+            if ($step === 4) {
+                $validator = Validator::make($request->all(), [
+                    'form_name'  => ['required', 'string', 'max:255'],
+                    'question'   => ['required', 'string', 'max:1000'],
+                    'start_at'   => ['required', 'date'],
+                    'end_at'     => ['required', 'date', 'after:start_at'],
+                    'options'    => ['required', 'array', 'min:2'],
+                    'options.*'  => ['nullable', 'string', 'max:500'],
+                ]);
+
+                if ($validator->fails()) {
+                    return back()->withErrors($validator)->withInput();
+                }
+
+                $data = $validator->validated();
+
+                $options = array_values(array_filter(array_map('trim', $data['options']), function ($v) {
+                    return $v !== '';
+                }));
+
+                if (count($options) < 2) {
+                    return back()->withErrors(['options' => 'Please provide at least two voting options.'])->withInput();
+                }
+
+                DB::beginTransaction();
+                try {
+                    $votingPayload = [
+                        'title'      => $data['form_name'],
+                        'question'   => $data['question'],
+                        'start_at'   => $data['start_at'],
+                        'end_at'     => $data['end_at'],
+                        'tariff_id'  => session('voting.selected_tariff') ?: null,
+                        'booking_id' => session('voting.booking_id') ?: null,
+                        'status'     => 1,
+                    ];
+
+                    $votingEvent = VotingEvent::create($votingPayload);
+
+                    $optionRows = array_map(function ($opt) {
+                        return [
+                            'option_text' => $opt,
+                            'votes_count' => 0,
+                            'status'      => 1,
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ];
+                    }, $options);
+
+                    $votingEvent->options()->createMany($optionRows);
+
+                    session(['voting.voting_event_id' => $votingEvent->id]);
+
+                    DB::commit();
+
+                    return redirect()->route('voting.create.step', ['step' => 5])
+                        ->with('success', 'Voting event saved successfully.');
+                } catch (\Throwable $e) {
+                    DB::rollBack();
+                    Log::error('Failed to save voting event: ' . $e->getMessage());
+                    return back()->with('error', 'Unable to save voting event. Please try again.')->withInput();
+                }
+            }
+
             return redirect()->route('voting.create.step', ['step' => $step]);
         }
 
@@ -154,9 +211,7 @@ class VotingController extends Controller
         ]);
     }
 
-    /**
-     * Standalone endpoint to select tariff (stores id in session then redirects to step 2).
-     */
+
     public function selectTariff(Request $request)
     {
         $validated = $request->validate([
