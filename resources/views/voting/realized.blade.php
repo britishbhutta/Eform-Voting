@@ -9,18 +9,9 @@
 
         <div class="card">
             <div class="card-body text-center">
-                @if(!empty($votings) && count($votings))
-                    <div class="row">
-                        @foreach($votings as $v)
-                            <div class="col-md-6 mb-3">
-                                <div class="border p-3">
-                                    <h5>{{ $v->title }}</h5>
-                                    <p class="mb-1 text-muted">Created: {{ $v->created_at->format('Y-m-d') }}</p>
-                                    <a href="#" class="btn btn-sm btn-primary">View</a>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+                @if(empty($bookings))
+                    <h4>No voting forms yet</h4>
+                    <p class="text-muted">Click <strong>Create A New Voting Form</strong>To Start Building Your First Poll.</p>
                 @else
                     <div class="container my-5">
                         <h3 class="mb-4">Voting Results</h3>
@@ -32,27 +23,32 @@
                                 <th>Name of voting form</th>
                                 <th>Result</th>
                                 <th>File with email</th>
-                                <th>Tarif</th>
+                                <th>Tariff</th>
                                 <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                <td>8.7.2024</td>
-                                <td>Player of the match 1st round</td>
-                                <td>Rolando 80%, Messi 20%</td>
-                                <td><a href="play1.csv" download>play1.csv</a></td>
-                                <td>extra</td>
-                                <td>Completed</td>
-                                </tr>
-                                <tr>
-                                <td>9.7.2024</td>
-                                <td>Player of the match 2st round</td>
-                                <td>Rolando 60%, Messi 40%</td>
-                                <td><a href="play2.csv" download>play2.csv</a></td>
-                                <td>extra</td>
-                                <td>Completed</td>
-                                </tr>
+                                @foreach ($bookings as $booking)
+                                    @if($booking->is_completed == '1')
+                                        <tr>
+                                            <td>8.7.2024</td>
+                                            <td>Player of the match 1st round</td>
+                                            <td>Rolando 80%, Messi 20%</td>
+                                            <td><a href="play1.csv" download>play1.csv</a></td>
+                                            <td>{{ $booking->tariff->title }}</td>
+                                            <td>Completed</td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>{{ $booking->tariff->title }}</td>
+                                            <td><a href="{{ route('voting.set', $booking->id) }}">Incomplete</a></td>
+                                        </tr>
+                                    @endif
+                                @endforeach
                             </tbody>
                             </table>
                         </div>

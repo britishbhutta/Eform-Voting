@@ -76,4 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('payment',[StripeController::class, 'store'])->name('stripe.payment');
 
     Route::post('/voting/select-tariff', [VotingController::class, 'selectTariff'])->name('voting.select_tariff');
+
+    Route::get('/voting/set/{id}', function($id) {
+        session(['inCom_selected_tariff' => $id]);
+        return redirect()->route('voting.create.step', 3);
+        })->name('voting.set'); 
 });
