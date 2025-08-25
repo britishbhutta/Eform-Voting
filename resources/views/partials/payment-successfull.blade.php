@@ -39,6 +39,13 @@
     <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
 
     {{-- Changed type to button so it doesn't submit --}}
-    <button type="button" id="rewardNextBtn" class="btn btn-success" disabled>Next</button>
+    <button type="button" id="rewardNextBtn" class="btn btn-success">Next</button>
 </div>
+
+<script>
+    var nextUrl = @json($nextUrl);
+    $(document).on('click', '#rewardNextBtn', function() {
+        window.location.href = nextUrl;
+    });
+</script>
 
