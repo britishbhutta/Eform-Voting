@@ -258,7 +258,7 @@ class VotingController extends Controller
                     return back()->with('error', 'Unable to save voting event. Please try again.')->withInput();
                 }
             }
-
+            //
             return redirect()->route('voting.create.step', ['step' => $step]);
         }
 
