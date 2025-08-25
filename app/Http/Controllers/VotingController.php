@@ -213,6 +213,8 @@ class VotingController extends Controller
                         'status'     => 1,
                     ];
 
+                    // 
+
                     if ($votingEvent) {
                         $votingEvent->update($votingPayload);
 
