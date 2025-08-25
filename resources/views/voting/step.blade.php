@@ -55,20 +55,10 @@
                         
                         @include('partials.details-form', ['selectedTariff' => $selectedTariff ?? null])
                     @else
-                        {{-- STEP 5: Creation of form (placeholder) --}}
-                        <div class="mb-3">
-                            <p class="text-muted">This is a placeholder for step {{ $currentStep }}. Replace with the actual form/content for this step.</p>
-                            @if($selectedTariff)
-                                <p><strong>Selected tariff:</strong> {{ $selectedTariff->title }} ({{ number_format($selectedTariff->price_cents / 100, 2) }} {{ $selectedTariff->currency }})</p>
-                            @endif
-                        </div>
 
-                        {{-- Example form elements for demonstration (remove/replace) --}}
-                        <div class="mb-3">
-                            <label class="form-label">Example field</label>
-                            <input class="form-control" type="text" />
-                        </div>
+                        @include('partials.qr-code', ['booking' => $booking ?? null])
 
+                        
                         {{-- Wizard actions area --}}
                         <div class="d-flex justify-content-between mt-4">
                             {{-- Back link --}}
