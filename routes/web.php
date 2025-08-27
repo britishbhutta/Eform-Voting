@@ -56,23 +56,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
 
-    // Canonical "create" entrypoint — redirects to step 1
-    Route::get('/voting/create', function () {
-        return redirect()->route('voting.create.step', ['step' => 1]);
-    })->name('voting.create');
-
-    // Wizard step route (1..5)
-    // Route::get('/voting/create/step/{step}', [VotingController::class, 'step'])
-    //     ->whereNumber('step')
-    //     ->name('voting.create.step');
 
     Route::match(['get', 'post'], '/voting/create/step/{step}', [VotingController::class, 'step'])
         ->whereNumber('step')
         ->name('voting.create.step');
 
     // Realized votings list
-    Route::get('/voting/realized', [VotingController::class, 'realized'])
-        ->name('voting.realized');
+    Route::get('/realized', [VotingController::class, 'realized'])->name('voting.realized');
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

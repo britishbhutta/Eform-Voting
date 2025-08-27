@@ -65,7 +65,7 @@
                                 $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
                             @endphp
                             <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
-                            <a href="{{ route('voting.create') }}" class="btn btn-primary">Finish</a>
+                            <a href="{{ route('voting.create.step', ['step' => 1] + (request()->query() ? request()->query() : [])) }}" class="btn btn-primary">Finish</a>
                         </div>
                     @endif
                 @endif
