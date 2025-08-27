@@ -158,6 +158,23 @@
     });
     </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts) {
+            setTimeout(() => {
+                alerts.forEach(alert => {
+                    alert.classList.add('fade');
+                    alert.classList.add('show');
+
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 500); 
+                });
+            }, 3000); 
+        }
+    });
+</script>
 
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
