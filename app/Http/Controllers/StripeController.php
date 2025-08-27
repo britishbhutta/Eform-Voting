@@ -15,6 +15,7 @@ class StripeController extends Controller
 {
     public function store(Request $request)
     {
+     
         $rules = [
             'stripeToken'   => 'required|string',
             'selectedTariffId' => 'required|exists:tariffs,id',
@@ -79,6 +80,11 @@ class StripeController extends Controller
         $booking->payment_method   = 'stripe';
         $booking->save();
 
+
+        // IMPORTANT: store booking id in session so step 3 (reward) can pick it up
+       // session(['voting.booking_id' => $booking->id]);
+        session()->forget('booking_id');
+
         // Create PurchasedTariff record
         try {
             $totalVotes = (int) ($selectedTariff->available_votes ?? 0);
@@ -106,6 +112,7 @@ class StripeController extends Controller
             'voting.purchased_tariff_id' => $purchased->id,
             'voting.selected_tariff' => $selectedTariff->id,
         ]);
+
 
         return response()->json([
             'status' => 'success',
