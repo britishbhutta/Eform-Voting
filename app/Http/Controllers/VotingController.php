@@ -335,7 +335,6 @@ class VotingController extends Controller
             }
            
 
-             //print_r($bookingId);die;
             
             if ($bookingId) {
                 $dbVoting = VotingEvent::with('options')->where('booking_id' ,$bookingId)->first();
@@ -479,11 +478,57 @@ class VotingController extends Controller
 
             DB::commit();
 
-            return view('voting.public.success', compact('votingEvent', 'selectedOption'));
+            return redirect()->route('voting.success', [
+                'token' => $token,
+                'option' => $selectedOption->id,
+            ])->with([
+                'selected_option_id' => $selectedOption->id,
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Vote submission failed: ' . $e->getMessage());
             return back()->with('error', 'Failed to submit vote. Please try again.');
         }
+    }
+
+    /**
+     * PRG success page: show success after a vote without repeating the mutation on refresh
+     */
+    public function voteSuccess(Request $request, $token)
+    {
+        $votingEvent = VotingEvent::with('options')
+            ->where('token', $token)
+            ->where('status', 1)
+            ->first();
+
+        if (! $votingEvent) {
+            abort(404, 'Voting event not found or inactive');
+        }
+
+        $selectedOption = null;
+        $selectedOptionId = session('selected_option_id');
+        if ($selectedOptionId) {
+            $selectedOption = VotingEventOption::where('id', $selectedOptionId)
+                ->where('voting_event_id', $votingEvent->id)
+                ->first();
+        }
+
+        // Fallback for refresh: use query param if flash data is gone
+        if (! $selectedOption) {
+            $qpId = $request->query('option');
+            if ($qpId) {
+                $selectedOption = VotingEventOption::where('id', $qpId)
+                    ->where('voting_event_id', $votingEvent->id)
+                    ->first();
+            }
+        }
+
+        // If still missing, avoid null dereference by redirecting to event page
+        if (! $selectedOption) {
+            return redirect()->route('voting.public', ['token' => $token])
+                ->with('status', 'Thank you for voting.');
+        }
+
+        return view('voting.public.success', compact('votingEvent', 'selectedOption'));
     }
 }
