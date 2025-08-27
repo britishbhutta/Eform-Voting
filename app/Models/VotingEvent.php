@@ -3,25 +3,31 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class VotingEvent extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'booking_id',
-        'tariff_id',
+        'purchased_tariff_id',
         'title',
         'question',
         'start_at',
         'end_at',
         'status',
+        'token',
     ];
 
-    public function tariff()
+    protected $casts = [
+        'start_at' => 'datetime',
+        'end_at' => 'datetime',
+    ];
+
+    public function purchasedTariff()
     {
-        return $this->belongsTo(Tariff::class);
+        return $this->belongsTo(PurchasedTariff::class, 'purchased_tariff_id');
     }
 
     public function booking()
