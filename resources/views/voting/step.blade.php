@@ -39,12 +39,10 @@
                         @include('partials.tariff-cards', ['tariffs' => $tariffs, 'selectedTariff' => $selectedTariff ?? null])
                     @elseif($currentStep === 2)
                         {{-- STEP 3: Insert reward --}}
-
-                        <h5 class="mb-3">Step {{ $currentStep }} — {{ $stepNames[$currentStep] }}</h5>
-                        @if(!$booking)
-                            @include('partials.personal-info-payment', ['selectedTariff' => $selectedTariff ?? null, 'currentStep' => $currentStep])
-                        @else
+                        @if($booking)
                             @include('partials.payment-successfull')
+                        @else
+                            @include('partials.personal-info-payment', ['selectedTariff' => $selectedTariff ?? null, 'currentStep' => $currentStep])
                         @endif
 
                     @elseif($currentStep === 3)

@@ -7,4 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Tariff extends Model
 {
     protected $fillable = ['title', 'description', 'note', 'features', 'price_cents', 'currency'];
+    public function booking()
+    {
+        return $this->hasMany(Booking::class, 'tariff_id', 'id');
+    }
 }

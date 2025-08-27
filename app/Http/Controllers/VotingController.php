@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Country;
 use App\Models\Tariff;
 use App\Models\Reward;
-use App\Models\Booking;
 use App\Models\VotingEvent;
 use App\Models\VotingEventOption;
 use Illuminate\Http\Request;
@@ -22,11 +21,11 @@ class VotingController extends Controller
 {
     public function realized(Request $request)
     {
-        $votings = []; // placeholder
-        return view('voting.realized', compact('votings'));
+        $bookings = Booking::where('user_id', auth()->id())->get();
+        return view('voting.realized', compact('bookings'));
     }
 
-    public function step(Request $request, $step)
+    public function step($step, Request $request,)
     {
         $step = (int) $step;
 
@@ -42,7 +41,16 @@ class VotingController extends Controller
             abort(404);
         }
 
-        $selectedId = session('voting.selected_tariff', null);
+        if (session('inCom_selected_tariff')) {
+            echo 'here';
+            $inComBooking = Booking::find(session('inCom_selected_tariff'));
+            $selectedId = $inComBooking->tariff_id;
+            session()->forget('inCom_selected_tariff');
+        }else{
+            echo 'else';
+            $selectedId = session('voting.selected_tariff', null);
+        }
+
         $selectedTariff = $selectedId ? Tariff::find($selectedId) : null;
 
         if ($selectedId && ! $selectedTariff) {
@@ -274,7 +282,12 @@ class VotingController extends Controller
         }
 
         $countries = ($step === 2) ? Country::active()->orderBy('name')->get() : null;
-        $booking = Booking::where('user_id', auth()->id())->where('tariff_id', $selectedId)->orderBy('id', 'desc')->first();
+
+        $booking = Booking::where('user_id',auth()->id())
+        ->where('tariff_id',$selectedId)
+        ->where('is_completed','0')
+        ->orderBy('id','desc')->first();
+        // Always pass both variables (tariffs may be null for steps > 1)
 
         $rewardData = [];
         if ($step === 3) {
@@ -346,6 +359,7 @@ class VotingController extends Controller
             $votingData = array_merge($defaultVoting, $dbValues, $sessionVoting, old());
         }
 
+
         // Get voting event for step 5
         $votingEvent = null;
         if ($step === 5) {
@@ -358,6 +372,7 @@ class VotingController extends Controller
                 $votingEvent = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
             }
         }
+
 
         return view('voting.step', [
             'currentStep' => $step,
