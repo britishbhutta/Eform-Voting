@@ -22,8 +22,14 @@ class VotingController extends Controller
 {
     public function realized(Request $request)
     {
-        $bookings = Booking::where('user_id', auth()->id())->get();
-        return view('voting.realized', compact('bookings'));
+       $bookings = Booking::where('user_id', auth()->id())->get();
+
+
+        if (!empty($bookings)) {
+            return view('voting.realized', compact('bookings'));
+        }else{
+            return redirect()->route('voting.create', ['step'=>1]);
+        }
     }
 
     public function step($step, Request $request,)
@@ -41,21 +47,29 @@ class VotingController extends Controller
         if ($step < 1 || $step > count($stepNames)) {
             abort(404);
         }
-
-            $selectedId = session('voting.selected_tariff', null);
-           
+       
+        $selectedId = session('voting.selected_tariff', null);
+        if (session()->has('booking_id')) { 
+            $bookingId = session('booking_id');
+            $selectedId = Booking::where('id', $bookingId)->value('tariff_id');
+          
+        }
+  
+            // get booking id
+        $bookingId = Booking::where('user_id', auth()->id())
+            ->where('tariff_id', $selectedId)
+            ->where('is_completed', '0')->value('id');
+        
         $selectedTariff = $selectedId ? Tariff::find($selectedId) : null;
-
+       
+        
+       
         if ($selectedId && ! $selectedTariff) {
             session()->forget('voting.selected_tariff');
             $selectedId = null;
             $selectedTariff = null;
         }
-        // get bookings 
-        $bookingId = Booking::where('user_id', auth()->id())
-            ->where('tariff_id', $selectedId)
-            ->where('is_completed', '0')->value('id');
-        // print_r($bookingId);die;
+        
         // 
         $tariffs = null;
         if ($step === 1) {
@@ -188,6 +202,9 @@ class VotingController extends Controller
                         $bookingId = $latestBooking->id;
                     }
                 }
+                if (session()->has('booking_id')) {
+                    $bookingId = session('booking_id');
+                }
 
                 DB::beginTransaction();
                 try {
@@ -317,6 +334,7 @@ class VotingController extends Controller
                 $bookingId = session('booking_id');
             }
            
+
             
             if ($bookingId) {
                 $dbVoting = VotingEvent::with('options')->where('booking_id' ,$bookingId)->first();
