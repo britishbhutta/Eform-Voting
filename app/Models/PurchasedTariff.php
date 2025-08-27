@@ -17,6 +17,7 @@ class PurchasedTariff extends Model
         'user_id',
         'total_votes',
         'remaining_votes',
+        'votes_count',
         'token',
         'is_active',
     ];
@@ -25,6 +26,7 @@ class PurchasedTariff extends Model
         'is_active' => 'boolean',
         'total_votes' => 'integer',
         'remaining_votes' => 'integer',
+        'votes_count' => 'integer',
     ];
 
     public function booking()

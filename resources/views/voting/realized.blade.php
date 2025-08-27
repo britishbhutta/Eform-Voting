@@ -16,12 +16,13 @@
                     <div class="container my-5">
                         <h3 class="mb-4">Voting Results</h3>
                         <div class="table-responsive">
-                            <table class="table table-striped table-bordered align-middle">
-                            <thead class="table-dark">
+                            <table class="table table-striped table-bordered align-middle table-green">
+                            <thead>
                                 <tr>
                                 <th>Date</th>
                                 <th>Name of voting form</th>
-                                <th>Result</th>
+                                <th>Vote Cast</th>
+                                <th>Results (%)</th>
                                 <th>File with email</th>
                                 <th>Tariff</th>
                                 <th>Status</th>
@@ -31,18 +32,76 @@
                                 @foreach ($bookings as $booking)
                                     @if($booking->is_completed == '1')
                                         <tr>
-                                            <td>8.7.2024</td>
-                                            <td>Player of the match 1st round</td>
-                                            <td>Rolando 80%, Messi 20%</td>
-                                            <td><a href="play1.csv" download>play1.csv</a></td>
+                                            <td>{{ optional($booking->created_at)->format('d.m.Y') ?? '-' }}</td>
+                                            @php
+                                                $votingEvent = \App\Models\VotingEvent::where('booking_id', $booking->id)->first();
+                                                $purchasedTariff = \App\Models\PurchasedTariff::where('booking_id', $booking->id)->first();
+                                                $options = $votingEvent ? \App\Models\VotingEventOption::where('voting_event_id', $votingEvent->id)->get() : collect();
+                                                $totalVotes = (int) ($purchasedTariff->total_votes ?? 0);
+                                            @endphp
+                                            <td>{{ $votingEvent?->title ?? '-' }}</td>
+                                            <td>{{ $purchasedTariff?->votes_count ?? 0 }}</td>
+                                            <td>
+                                                @if($options->isNotEmpty())
+                                                    @php
+                                                        $percentages = [];
+                                                        foreach ($options as $opt) {
+                                                            $percentages[] = $totalVotes > 0 ? round(($opt->votes_count / $totalVotes) * 100) : 0;
+                                                        }
+                                                        $maxPct = count($percentages) ? max($percentages) : 0;
+
+                                                        $partsHtml = [];
+                                                        foreach ($options as $index => $opt) {
+                                                            $pct = $percentages[$index] ?? 0;
+                                                            $isWinner = ($pct === $maxPct) && ($maxPct > 0);
+                                                            $class = $isWinner ? 'text-danger' : '';
+                                                            $style = $isWinner ? 'font-weight:900; font-size:1.3em; color:#dc3545 !important;' : '';
+                                                            $partsHtml[] = '<span class="' . $class . '" style="' . $style . '">' . e($opt->option_text) . ' <strong>' . $pct . '%</strong></span>';
+                                                        }
+                                                    @endphp
+                                                    {!! implode(', ', $partsHtml) !!}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>-</td>
                                             <td>{{ $booking->tariff->title }}</td>
                                             <td>Completed</td>
                                         </tr>
                                     @else
                                         <tr>
-                                            <td>-</td>
-                                            <td>-</td>
-                                            <td>-</td>
+                                            <td>{{ optional($booking->created_at)->format('d.m.Y') ?? '-' }}</td>
+                                            @php
+                                                $votingEvent = \App\Models\VotingEvent::where('booking_id', $booking->id)->first();
+                                                $purchasedTariff = \App\Models\PurchasedTariff::where('booking_id', $booking->id)->first();
+                                                $options = $votingEvent ? \App\Models\VotingEventOption::where('voting_event_id', $votingEvent->id)->get() : collect();
+                                                $totalVotes = (int) ($purchasedTariff->total_votes ?? 0);
+                                            @endphp
+                                            <td>{{ $votingEvent?->title ?? '-' }}</td>
+                                            <td>{{ $purchasedTariff?->votes_count ?? 0 }}</td>
+                                            <td>
+                                                @if($options->isNotEmpty())
+                                                    @php
+                                                        $percentages = [];
+                                                        foreach ($options as $opt) {
+                                                            $percentages[] = $totalVotes > 0 ? round(($opt->votes_count / $totalVotes) * 100) : 0;
+                                                        }
+                                                        $maxPct = count($percentages) ? max($percentages) : 0;
+
+                                                        $partsHtml = [];
+                                                        foreach ($options as $index => $opt) {
+                                                            $pct = $percentages[$index] ?? 0;
+                                                            $isWinner = ($pct === $maxPct) && ($maxPct > 0);
+                                                            $class = $isWinner ? 'text-danger' : '';
+                                                            $style = $isWinner ? 'font-weight:900; font-size:1.3em; color:#dc3545 !important;' : '';
+                                                            $partsHtml[] = '<span class="' . $class . '" style="' . $style . '">' . e($opt->option_text) . ' <strong>' . $pct . '%</strong></span>';
+                                                        }
+                                                    @endphp
+                                                    {!! implode(', ', $partsHtml) !!}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                             <td>-</td>
                                             <td>{{ $booking->tariff->title }}</td>
                                             <td>
