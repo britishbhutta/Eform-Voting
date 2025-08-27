@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Country;
 use App\Models\Tariff;
+use App\Models\Booking;
 use App\Models\Reward;
 use App\Models\VotingEvent;
 use App\Models\VotingEventOption;
@@ -39,16 +40,8 @@ class VotingController extends Controller
             abort(404);
         }
 
-        if (session('inCom_selected_tariff')) {
-            echo 'here';
-            $inComBooking = Booking::find(session('inCom_selected_tariff'));
-            $selectedId = $inComBooking->tariff_id;
-            session()->forget('inCom_selected_tariff');
-        }else{
-            echo 'else';
             $selectedId = session('voting.selected_tariff', null);
-        }
-
+           
         $selectedTariff = $selectedId ? Tariff::find($selectedId) : null;
 
         if ($selectedId && ! $selectedTariff) {
@@ -56,10 +49,17 @@ class VotingController extends Controller
             $selectedId = null;
             $selectedTariff = null;
         }
-
+        // get bookings 
+        $bookingId = Booking::where('user_id', auth()->id())
+            ->where('tariff_id', $selectedId)
+            ->where('is_completed', '0')->value('id');
+        // print_r($bookingId);die;
+        // 
         $tariffs = null;
         if ($step === 1) {
             $tariffs = Tariff::orderBy('price_cents', 'asc')->get();
+            session()->forget('booking_id');
+
         } else {
             if (! $selectedTariff) {
                 return redirect()->route('voting.create.step', ['step' => 1])
@@ -75,6 +75,7 @@ class VotingController extends Controller
                 ]);
 
                 session(['voting.selected_tariff' => (int) $validated['tariff']]);
+           
 
                 return redirect()->route('voting.create.step', ['step' => 2]);
             }
@@ -107,25 +108,11 @@ class VotingController extends Controller
 
                 session(['voting.reward' => $rewardDraft]);
 
-                $bookingId = $request->input('booking_id') ?: session('voting.booking_id');
-
-                if (! $bookingId && Auth::check()) {
-                    $latestBooking = Booking::where('user_id', Auth::id())
-                        ->orderByDesc('created_at')
-                        ->first();
-                    if ($latestBooking) {
-                        $bookingId = $latestBooking->id;
-                    }
-                }
-
+               
                 if (! $bookingId) {
                     return back()->with('error', 'No booking found. Please complete payment or select a booking before saving a reward.')->withInput();
                 }
 
-                $booking = Booking::find($bookingId);
-                if (! $booking) {
-                    return back()->with('error', 'Booking not found.')->withInput();
-                }
 
                 $payload = [
                     'name' => $rewardDraft['reward_name'],
@@ -134,10 +121,12 @@ class VotingController extends Controller
                 if (!empty($rewardDraft['reward_image'])) {
                     $payload['image'] = $rewardDraft['reward_image'];
                 }
-
+                if (session()->has('booking_id')) {
+                    $bookingId = session('booking_id');
+                }
                 try {
                     $reward = Reward::updateOrCreate(
-                        ['booking_id' => $booking->id],
+                        ['booking_id' => $bookingId],
                         $payload
                     );
                 } catch (\Throwable $e) {
@@ -145,7 +134,7 @@ class VotingController extends Controller
                     return back()->with('error', 'Unable to save reward. Please try again.')->withInput();
                 }
 
-                session(['voting.booking_id' => $booking->id]);
+                
 
                 if (!empty($reward->image) && Storage::disk('public')->exists($reward->image)) {
                     $currentDraft = session('voting.reward', []);
@@ -188,7 +177,7 @@ class VotingController extends Controller
                     return back()->withErrors(['options' => 'Please provide at least two voting options.'])->withInput();
                 }
 
-                $bookingId = $request->input('booking_id') ?: session('voting.booking_id');
+                // $bookingId = $request->input('booking_id') ?: session('voting.booking_id');
                 if (! $bookingId && Auth::check()) {
                     $latestBooking = Booking::where('user_id', Auth::id())
                         ->orderByDesc('created_at')
@@ -280,25 +269,20 @@ class VotingController extends Controller
 
         $rewardData = [];
         if ($step === 3) {
-            $sessionReward = session('voting.reward', []);
-            $dbReward = null;
-            if ($booking) {
-                $dbReward = Reward::where('booking_id', $booking->id)->first();
-            }
-
-            $dbValues = [];
-            if ($dbReward) {
+            
+           if(isset($_GET['booking_id'])){
+                $bookingId = $_GET['booking_id'];
+                session(['booking_id' => $_GET['booking_id']]);
+           }
+            
+            $dbReward = Reward::where('booking_id', $bookingId)->first();
+            
                 $dbValues = [
-                    'reward_name' => $dbReward->name,
-                    'reward_description' => $dbReward->description,
+                    'reward_name' => $dbReward->name?? null,
+                    'reward_description' => $dbReward->description?? null,
                     'reward_image' => $dbReward->image ?? null,
                 ];
-            } else {
-                if (! empty($sessionReward)) {
-                    session()->forget('voting.reward');
-                    $sessionReward = [];
-                }
-            }
+            
 
             $rewardData = array_merge(
                 [
@@ -307,7 +291,7 @@ class VotingController extends Controller
                     'reward_image' => null,
                 ],
                 $dbValues,
-                $sessionReward,
+              
                 old()
             );
         }
@@ -315,15 +299,18 @@ class VotingController extends Controller
         $votingData = [];
         if ($step === 4) {
             $sessionVoting = session('voting.voting', []);
+           
             $dbVoting = null;
 
-            $existingEventId = session('voting.voting_event_id', null);
-            if ($existingEventId) {
-                $dbVoting = VotingEvent::with('options')->find($existingEventId);
+            if (session()->has('booking_id')) {
+                $bookingId = session('booking_id');
             }
+           
 
-            if (!$dbVoting && $booking) {
-                $dbVoting = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
+             print_r($bookingId);die;
+            
+            if ($bookingId) {
+                $dbVoting = VotingEvent::with('options')->where('booking_id' ,$bookingId)->first();
             }
 
             $defaultVoting = [

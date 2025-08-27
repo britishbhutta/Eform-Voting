@@ -11,7 +11,7 @@ class DashboardController extends Controller
         $bookings = Booking::where('user_id', auth()->id())->get();
 
 
-        if ($bookings) {
+        if (!empty($bookings)) {
             return view('voting.realized', compact('bookings'));
         }else{
             return redirect()->route('voting.create');

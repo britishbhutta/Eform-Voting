@@ -9,7 +9,7 @@
 
         <div class="card">
             <div class="card-body text-center">
-                @if(empty($bookings))
+                @if($bookings->isEmpty())
                     <h4>No voting forms yet</h4>
                     <p class="text-muted">Click <strong>Create A New Voting Form</strong>To Start Building Your First Poll.</p>
                 @else
@@ -45,7 +45,12 @@
                                             <td>-</td>
                                             <td>-</td>
                                             <td>{{ $booking->tariff->title }}</td>
-                                            <td><a href="{{ route('voting.set', $booking->id) }}">Incomplete</a></td>
+                                            <td>
+                                                <form action="{{ route('voting.set', $booking->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-primary btn-sm">Incomplete</button>
+                                                </form>
+                                            </td>
                                         </tr>
                                     @endif
                                 @endforeach

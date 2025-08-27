@@ -77,8 +77,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/voting/select-tariff', [VotingController::class, 'selectTariff'])->name('voting.select_tariff');
 
-    Route::get('/voting/set/{id}', function($id) {
-        session(['inCom_selected_tariff' => $id]);
-        return redirect()->route('voting.create.step', 3);
-        })->name('voting.set'); 
+    Route::post('/voting/set/{id}', function ($id) {
+    return redirect()->route('voting.create.step', [
+        'step' => 3,
+        'booking_id' => $id
+            ]);
+        })->name('voting.set');
 });

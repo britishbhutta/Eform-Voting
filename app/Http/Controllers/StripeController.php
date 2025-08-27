@@ -11,6 +11,7 @@ class StripeController extends Controller
 {
     public function store(Request $request)
     {
+     
         $rules = [
             'stripeToken'   => 'required|string',
             
@@ -75,8 +76,8 @@ class StripeController extends Controller
         $booking->save();
 
         // IMPORTANT: store booking id in session so step 3 (reward) can pick it up
-        session(['voting.booking_id' => $booking->id]);
-
+       // session(['voting.booking_id' => $booking->id]);
+        session()->forget('booking_id');
         return response()->json([
             'status' => 'success',
             'message' => 'Payment processed successfully!',
