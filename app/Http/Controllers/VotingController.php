@@ -473,8 +473,9 @@ class VotingController extends Controller
             $selectedOption = VotingEventOption::find($request->selected_option);
             $selectedOption->increment('votes_count');
 
-            // Decrease the remaining votes count
+            // Decrease the remaining votes count and increase total votes cast on purchased tariff
             $purchasedTariff->decrement('remaining_votes');
+            $purchasedTariff->increment('votes_count');
 
             DB::commit();
 

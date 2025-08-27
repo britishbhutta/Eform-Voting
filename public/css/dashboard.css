@@ -212,7 +212,7 @@
 }
 
 /* -------------------------
-   Layout Tweaks
+   Layout Tweaks    
    ------------------------- */
 .row.g-2 {
     margin-left: -6px;
@@ -393,4 +393,14 @@ input[type="time"] {
 .is-invalid {
     border-color: #dc3545 !important;
     box-shadow: none !important;
+}
+
+
+/* -------------------------
+   Voting Results Styles
+   ------------------------- */
+
+.table-green thead th {
+    background: #0b9b2a;
+    color: #fff;
 }
