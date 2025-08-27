@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Tariff;
+use App\Models\PurchasedTariff;
 use Illuminate\Http\Request;
 use Validator;
+use Illuminate\Support\Str;
+
+
 
 class StripeController extends Controller
 {
@@ -13,7 +17,8 @@ class StripeController extends Controller
     {
         $rules = [
             'stripeToken'   => 'required|string',
-            
+            'selectedTariffId' => 'required|exists:tariffs,id',
+
 
             // Billing info
             'email'         => 'required|email',
@@ -44,15 +49,15 @@ class StripeController extends Controller
 
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
         $charge = $stripe->charges->create([
-        'amount' => $selectedTariff->price_cents,
-        'currency' => $selectedTariff->currency,
-        'source' => $request->stripeToken,
+            'amount' => $selectedTariff->price_cents,
+            'currency' => $selectedTariff->currency,
+            'source' => $request->stripeToken,
         ]);
 
         $validated = $validator->validated();
         $booking = new Booking;
-        $booking->tariff_id        = $request->selectedTariffId; 
-        $booking->user_id          = auth()->id(); 
+        $booking->tariff_id        = $request->selectedTariffId;
+        $booking->user_id          = auth()->id();
 
         $booking->email            = $validated['email'];
         $booking->phone            = $validated['phone_number'] ?? null;
@@ -65,22 +70,48 @@ class StripeController extends Controller
         $booking->zip              = $validated['zip'];
         $booking->country          = $validated['country'];
 
-        $booking->booking_reference = strtoupper(uniqid('BOOK-')); 
+        $booking->booking_reference = strtoupper(uniqid('BOOK-'));
         $booking->price            = $selectedTariff->price_cents / 100;
         $booking->currency         = $selectedTariff->currency;
-        $booking->transaction_id   = $charge->id; 
-        $booking->payment_status   = $charge->status; 
+        $booking->transaction_id   = $charge->id;
+        $booking->payment_status   = $charge->status;
 
         $booking->payment_method   = 'stripe';
         $booking->save();
 
-        // IMPORTANT: store booking id in session so step 3 (reward) can pick it up
-        session(['voting.booking_id' => $booking->id]);
+        // Create PurchasedTariff record
+        try {
+            $totalVotes = (int) ($selectedTariff->available_votes ?? 0);
+            $purchased = PurchasedTariff::create([
+                'booking_id'     => $booking->id,
+                'tariff_id'      => $selectedTariff->id,
+                'user_id'        => auth()->id() ?: null,
+                'total_votes'    => $totalVotes,
+                'remaining_votes' => $totalVotes,
+                'token'          => (string) Str::uuid(),
+                'is_active'      => true,
+            ]);
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Payment processed successfully but failed to create purchased tariff: ' . $e->getMessage(),
+                'booking_id' => $booking->id,
+            ]);
+        }
+
+        // store booking & purchased id in session for the wizard flow
+        session([
+            'voting.booking_id' => $booking->id,
+            'voting.purchased_tariff_id' => $purchased->id,
+            'voting.selected_tariff' => $selectedTariff->id,
+        ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Payment processed successfully!',
             'booking_id' => $booking->id,
+            'purchased_tariff_id' => $purchased->id,
         ]);
     }
 }

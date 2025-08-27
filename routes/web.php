@@ -40,6 +40,13 @@ Route::post('email/verify', [EmailVerificationController::class, 'verify'])
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])
     ->name('verification.resend');
 
+// Public voting route for voters
+Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
+    ->name('voting.public');
+
+Route::post('/voting/{token}/submit', [VotingController::class, 'submitVote'])
+    ->name('voting.submit');
+
 // Authenticated user routes (dashboard, profile) protected by auth + verified
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard: canonical dashboard route (redirect to the wizard start)
