@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use App\Models\PurchasedTariff;
 
 class VotingController extends Controller
 {
@@ -200,15 +202,24 @@ class VotingController extends Controller
                         $votingEvent = VotingEvent::where('booking_id', $bookingId)->first();
                     }
 
+                    // Resolve purchased tariff id from session or via booking fallback
+                    $purchasedTariffId = session('voting.purchased_tariff_id');
+                    if (! $purchasedTariffId && $bookingId) {
+                        $purchasedTariffId = PurchasedTariff::where('booking_id', $bookingId)->value('id');
+                    }
+
                     $votingPayload = [
                         'title'      => $data['form_name'],
                         'question'   => $data['question'],
-                        'start_at'   => Carbon::parse($data['start_at']),
-                        'end_at'     => Carbon::parse($data['end_at']),
-                        'tariff_id'  => session('voting.selected_tariff') ?: null,
+                        'start_at'   => Carbon::createFromFormat('Y-m-d\\TH:i', $data['start_at'], config('app.timezone')),
+                        'end_at'     => Carbon::createFromFormat('Y-m-d\\TH:i', $data['end_at'], config('app.timezone')),
+                        'purchased_tariff_id' => $purchasedTariffId ?? null,
                         'booking_id' => $bookingId ?: null,
                         'status'     => 1,
+                        'token'      => Str::uuid()->toString(),
                     ];
+
+                    // 
 
                     if ($votingEvent) {
                         $votingEvent->update($votingPayload);
@@ -326,13 +337,27 @@ class VotingController extends Controller
                 $dbValues = [
                     'form_name' => $dbVoting->title,
                     'question' => $dbVoting->question,
-                    'start_at' => $dbVoting->start_at ? Carbon::parse($dbVoting->start_at)->format('Y-m-d\TH:i') : '',
-                    'end_at'   => $dbVoting->end_at ? Carbon::parse($dbVoting->end_at)->format('Y-m-d\TH:i') : '',
+                    'start_at' => $dbVoting->start_at ? Carbon::parse($dbVoting->start_at)->format('Y-m-d\\TH:i') : '',
+                    'end_at'   => $dbVoting->end_at ? Carbon::parse($dbVoting->end_at)->format('Y-m-d\\TH:i') : '',
                     'options'  => $dbVoting->options->pluck('option_text')->toArray(),
                 ];
             }
 
             $votingData = array_merge($defaultVoting, $dbValues, $sessionVoting, old());
+        }
+
+
+        // Get voting event for step 5
+        $votingEvent = null;
+        if ($step === 5) {
+            $existingEventId = session('voting.voting_event_id', null);
+            if ($existingEventId) {
+                $votingEvent = VotingEvent::with('options')->find($existingEventId);
+            }
+            
+            if (!$votingEvent && $booking) {
+                $votingEvent = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
+            }
         }
 
 
@@ -345,6 +370,7 @@ class VotingController extends Controller
             'countries'      => $countries,
             'rewardData'     => $rewardData,
             'votingData'     => $votingData,
+            'votingEvent'    => $votingEvent,
         ]);
     }
 
@@ -357,5 +383,90 @@ class VotingController extends Controller
         session(['voting.selected_tariff' => (int) $validated['tariff']]);
 
         return redirect()->route('voting.create.step', ['step' => 2]);
+    }
+
+    /**
+     * Public voting access for voters using token
+     */
+    public function publicVoting($token)
+    {
+        $votingEvent = VotingEvent::with('options')
+            ->where('token', $token)
+            ->where('status', 1)
+            ->first();
+
+        if (!$votingEvent) {
+            abort(404, 'Voting event not found or inactive');
+        }
+
+        // Check if voting is still active (within start/end dates)
+        $now = Carbon::now();
+        if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
+            return view('voting.public.not-started', compact('votingEvent'));
+        }
+
+        if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
+            return view('voting.public.ended', compact('votingEvent'));
+        }
+
+        return view('voting.public.vote', compact('votingEvent'));
+    }
+
+    /**
+     * Submit a vote and decrease remaining votes count
+     */
+    public function submitVote(Request $request, $token)
+    {
+        $votingEvent = VotingEvent::with('options')
+            ->where('token', $token)
+            ->where('status', 1)
+            ->first();
+
+        if (!$votingEvent) {
+            abort(404, 'Voting event not found or inactive');
+        }
+
+        // Check if voting is still active
+        $now = Carbon::now();
+        if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
+            return back()->with('error', 'Voting has not started yet.');
+        }
+
+        if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
+            return back()->with('error', 'Voting has ended.');
+        }
+
+        // Validate the request
+        $request->validate([
+            'selected_option' => 'required|exists:voting_event_options,id',
+        ]);
+
+        // Resolve purchased tariff (relation or fallback via booking)
+        $purchasedTariff = $votingEvent->purchasedTariff;
+        if (! $purchasedTariff && $votingEvent->booking_id) {
+            $purchasedTariff = PurchasedTariff::where('booking_id', $votingEvent->booking_id)->first();
+        }
+
+        if (! $purchasedTariff || $purchasedTariff->remaining_votes <= 0) {
+            return back()->with('error', 'No more votes available for this event.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Increment the vote count for the selected option
+            $selectedOption = VotingEventOption::find($request->selected_option);
+            $selectedOption->increment('votes_count');
+
+            // Decrease the remaining votes count
+            $purchasedTariff->decrement('remaining_votes');
+
+            DB::commit();
+
+            return view('voting.public.success', compact('votingEvent', 'selectedOption'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Vote submission failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to submit vote. Please try again.');
+        }
     }
 }
