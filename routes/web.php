@@ -47,6 +47,10 @@ Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
 Route::post('/voting/{token}/submit', [VotingController::class, 'submitVote'])
     ->name('voting.submit');
 
+// PRG success page after submitting a vote
+Route::get('/voting/{token}/success', [VotingController::class, 'voteSuccess'])
+    ->name('voting.success');
+
 // Authenticated user routes (dashboard, profile) protected by auth + verified
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard: canonical dashboard route (redirect to the wizard start)
