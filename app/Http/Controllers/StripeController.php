@@ -83,7 +83,7 @@ class StripeController extends Controller
 
         // IMPORTANT: store booking id in session so step 3 (reward) can pick it up
        // session(['voting.booking_id' => $booking->id]);
-        session()->forget('booking_id');
+      
 
         // Create PurchasedTariff record
         try {
