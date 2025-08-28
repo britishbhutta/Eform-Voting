@@ -47,6 +47,14 @@ class VotingController extends Controller
         if ($step < 1 || $step > count($stepNames)) {
             abort(404);
         }
+
+        if($step === 3){
+            if(isset($_GET['booking_id'])){
+                $bookingId = $_GET['booking_id'];
+                session(['booking_id' => $_GET['booking_id']]);
+           }
+        }
+ 
        
         $selectedId = session('voting.selected_tariff', null);
         if (session()->has('booking_id')) { 
@@ -70,11 +78,12 @@ class VotingController extends Controller
             $selectedTariff = null;
         }
         
-        // 
+        
         $tariffs = null;
         if ($step === 1) {
             $tariffs = Tariff::orderBy('price_cents', 'asc')->get();
             session()->forget('booking_id');
+            session()->forget('voting.voting_event_id');
 
         } else {
             if (! $selectedTariff) {
@@ -193,7 +202,6 @@ class VotingController extends Controller
                     return back()->withErrors(['options' => 'Please provide at least two voting options.'])->withInput();
                 }
 
-                // $bookingId = $request->input('booking_id') ?: session('voting.booking_id');
                 if (! $bookingId && Auth::check()) {
                     $latestBooking = Booking::where('user_id', Auth::id())
                         ->orderByDesc('created_at')
@@ -219,10 +227,17 @@ class VotingController extends Controller
                         $votingEvent = VotingEvent::where('booking_id', $bookingId)->first();
                     }
 
-                    // Resolve purchased tariff id from session or via booking fallback
                     $purchasedTariffId = session('voting.purchased_tariff_id');
                     if (! $purchasedTariffId && $bookingId) {
                         $purchasedTariffId = PurchasedTariff::where('booking_id', $bookingId)->value('id');
+                    }
+
+                    if ($votingEvent) {
+                        $belongsToDifferentBooking = $bookingId && $votingEvent->booking_id !== $bookingId;
+                        if ($belongsToDifferentBooking) {
+                            $votingEvent = null;
+                            session()->forget('voting.voting_event_id');
+                        }
                     }
 
                     $votingPayload = [
@@ -236,38 +251,48 @@ class VotingController extends Controller
                         'token'      => Str::uuid()->toString(),
                     ];
 
-                    // 
+                    
 
                     if ($votingEvent) {
                         $votingEvent->update($votingPayload);
-
-                        $votingEvent->options()->delete();
-
-                        $optionRows = array_map(function ($opt) {
-                            return [
-                                'option_text' => $opt,
-                                'votes_count' => 0,
-                                'status'      => 1,
-                                'created_at'  => now(),
-                                'updated_at'  => now(),
-                            ];
-                        }, $options);
-
-                        $votingEvent->options()->createMany($optionRows);
                     } else {
-                        $votingEvent = VotingEvent::create($votingPayload);
+                     
+                        if ($bookingId) {
+                            $votingEvent = VotingEvent::updateOrCreate(
+                                ['booking_id' => $bookingId],
+                                $votingPayload
+                            );
+                        } else {
+                            $votingEvent = VotingEvent::create($votingPayload);
+                        }
+                    }
 
-                        $optionRows = array_map(function ($opt) {
-                            return [
-                                'option_text' => $opt,
+
+                    $existingOptions = $votingEvent->options()->orderBy('id')->get();
+
+                    $existingCount = $existingOptions->count();
+                    $newCount = count($options);
+                    $max = max($existingCount, $newCount);
+
+                    for ($i = 0; $i < $max; $i++) {
+                        $existing = $existingOptions[$i] ?? null;
+                        $newText = $options[$i] ?? null;
+
+                        if ($existing && $newText !== null) {
+                            // Update text only; keep votes_count and status as-is
+                            $existing->option_text = $newText;
+                            $existing->save();
+                        } elseif ($existing && $newText === null) {
+                            // Extra old option -> delete it
+                            $existing->delete();
+                        } elseif (! $existing && $newText !== null) {
+                            // New option beyond existing -> create it
+                            $votingEvent->options()->create([
+                                'option_text' => $newText,
                                 'votes_count' => 0,
                                 'status'      => 1,
-                                'created_at'  => now(),
-                                'updated_at'  => now(),
-                            ];
-                        }, $options);
-
-                        $votingEvent->options()->createMany($optionRows);
+                            ]);
+                        }
                     }
 
                     session(['voting.voting_event_id' => $votingEvent->id]);
