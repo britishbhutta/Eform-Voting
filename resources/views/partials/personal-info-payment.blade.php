@@ -235,8 +235,7 @@
     let form = $('#stripe-form');
     let submitBtn = form.find('button[type="submit"]');
 
-    submitBtn.html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-
+    submitBtn.html('<span class="spinner-border spinner-border-sm"></span> Processing...').prop('disabled', true);
     stripe.createToken(cardNumber).then(function(result) {
         if (result.error) {
             showToast(result.error.message, "error");
