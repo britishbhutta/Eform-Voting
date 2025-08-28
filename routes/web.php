@@ -84,4 +84,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'booking_id' => $id
             ]);
         })->name('voting.set');
+        Route::get('/terms', function () {
+            return view('term-condition.terms-for-tariff-selection'); // resources/views/terms.blade.php
+        })->name('terms.show');
 });

@@ -35,8 +35,38 @@
                     </div>
                 @else
                     @if($currentStep === 1)
+                        <div class="selected-info-tariff text-muted mb-4">
+                            @if(!empty($selectedTariff))
+
+                            @else
+                                No tariff selected
+                            @endif
+                        </div>
                         {{-- STEP 1: Choose tariff (via partial) --}}
                         @include('partials.tariff-cards', ['tariffs' => $tariffs, 'selectedTariff' => $selectedTariff ?? null])
+                        <form method="POST" action="{{ route('voting.select_tariff') }}">
+                        @csrf
+                        <input type="hidden" name="tariff" id="selectedTariffInput" value="{{ $selectedTariff ? $selectedTariff->id : '' }}">
+
+                        <div class="wizard-actions mt-4 d-flex justify-content-between align-items-center">
+                            <div class="selected-info text-muted">
+                                @if(!empty($selectedTariff))
+                                    <!-- Selected: {{ $selectedTariff->title }} -->
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="termsCheckbox">
+                                        <label class="form-check-label" for="termsCheckbox">
+                                            I agree to the <a href="" target="_blank">Terms & Conditions</a>
+                                        </label>
+                                    </div>
+                                @endif
+                            </div>
+                            <div>
+                                <a href="{{ route('voting.realized') }}" class="btn btn-light me-2">Cancel</a>
+                                <button type="submit" id="wizardNextBtn" class="btn btn-success" {{ empty($selectedTariff) ? 'disabled' : '' }}>Next</button>
+                            </div>
+                        </div>
+                    </form>
+
                     @elseif($currentStep === 2)
                         {{-- STEP 3: Insert reward --}}
                         @if($booking)
@@ -74,24 +104,7 @@
 
          {{-- For step 1 actions (outside card, wrapped in form) --}}
         @if($currentStep === 1)
-            <form method="POST" action="{{ route('voting.select_tariff') }}">
-                @csrf
-                <input type="hidden" name="tariff" id="selectedTariffInput" value="{{ $selectedTariff ? $selectedTariff->id : '' }}">
- 
-                <div class="wizard-actions mt-4 d-flex justify-content-between align-items-center">
-                    <div class="selected-info text-muted">
-                        @if(!empty($selectedTariff))
-                            Selected: {{ $selectedTariff->title }}
-                        @else
-                            No tariff selected
-                        @endif
-                    </div>
-                    <div>
-                        <a href="{{ route('voting.realized') }}" class="btn btn-light me-2">Cancel</a>
-                        <button type="submit" id="wizardNextBtn" class="btn btn-success" {{ empty($selectedTariff) ? 'disabled' : '' }}>Next</button>
-                    </div>
-                </div>
-            </form>
+            
         @endif
     </div>
 
@@ -112,20 +125,56 @@
                 const cards = document.querySelectorAll('.selectable-card');
                 const nextBtn = document.getElementById('wizardNextBtn');
                 const selectedInfo = document.querySelector('.selected-info');
+                const selectedInfoTariff = document.querySelector('.selected-info-tariff');
                 const selectedInput = document.getElementById('selectedTariffInput');
+                const termsCheckbox = document.getElementById('termsCheckbox');
                 let selectedTariffId = @json($selectedTariff ? $selectedTariff->id : '');
- 
+
+                // Enable Next only when tariff + checkbox are valid
+                function updateNextButtonState() {
+                    if (selectedTariffId && (!termsCheckbox || termsCheckbox.checked)) {
+                        nextBtn.disabled = false;
+                    } else {
+                        nextBtn.disabled = true;
+                    }
+                }
+
                 function setSelected(cardEl) {
                     cards.forEach(c => c.classList.remove('selected'));
                     cardEl.classList.add('selected');
                     selectedTariffId = cardEl.getAttribute('data-tariff-id');
                     const header = cardEl.querySelector('.card-header strong');
                     const title = header ? header.innerText : 'Tariff';
-                    selectedInfo.textContent = 'Selected: ' + title;
+
+                    // Inject checkbox into DOM
+                    selectedInfo.innerHTML = `
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="termsCheckbox">
+                            <label class="form-check-label" for="termsCheckbox">
+                                I agree to the <a href="{{ route('terms.show') }}" target="_blank">Terms & Conditions</a>
+                            </label>
+                        </div>
+                    `;
+                    selectedInfoTariff.innerHTML = `
+                      <strong>  Selected: </strong> ${title} 
+                    `;
                     selectedInput.value = selectedTariffId;
-                    if (nextBtn) nextBtn.disabled = false;
+
+                    // Force-disable Next until user checks
+                    nextBtn.disabled = true;
+
+                    // Bind new checkbox
+                    const newCheckbox = document.getElementById('termsCheckbox');
+                    if (newCheckbox) {
+                        newCheckbox.addEventListener('change', function () {
+                            nextBtn.disabled = !this.checked; // enable only when checked
+                        });
+                    }
                 }
- 
+
+
+
+
                 cards.forEach(card => {
                     card.addEventListener('click', function () {
                         setSelected(this);
@@ -144,12 +193,20 @@
                         });
                     }
                 });
- 
+
+                // Attach listener if checkbox already in DOM
+                if (termsCheckbox) {
+                    termsCheckbox.addEventListener('change', updateNextButtonState);
+                }
+
+                // Initialize state if already selected
                 if (selectedTariffId) {
                     const initialCard = [...cards].find(c => c.getAttribute('data-tariff-id') === selectedTariffId.toString());
                     if (initialCard) {
                         setSelected(initialCard);
                     }
+                } else {
+                    updateNextButtonState();
                 }
             }
         });

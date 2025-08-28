@@ -1,7 +1,6 @@
-
 <div class="p-4">
     <h5 class="mb-4 text-center">Voting Event Created Successfully!</h5>
-
+ 
     @if($selectedTariff)
         <div class="mb-3 text-center">
             <p class="mb-0 text-success">
@@ -11,7 +10,7 @@
             </p>
         </div>
     @endif
-
+ 
     @if($votingEvent)
         <div class="mb-4">
             <div class="row">
@@ -27,12 +26,16 @@
                     <p class="text-muted small">Scan this QR code to access the voting form</p>
                     <div id="qrcode" class="mt-3 d-inline-block"></div>
                     <div class="mt-3">
+                        <div class="mt-2">
+                            <button class="btn btn-primary btn-sm" type="button" id="download-qr-btn">Download QR Code</button>
+                        </div>
                         @php($publicUrl = route('voting.public', ['token' => $votingEvent->token]))
-                        <div class="input-group input-group-sm" style="max-width: 100%;">
+                        <div class="input-group input-group-sm mt-3" style="max-width: 100%;">
                             <input type="text" class="form-control" id="voting-url" value="{{ $publicUrl }}" readonly>
                             <button class="btn btn-outline-secondary" type="button" id="copy-voting-url">Copy</button>
                         </div>
                         
+                       
                     </div>
                 </div>
             </div>
@@ -43,7 +46,7 @@
         </div>
     @endif
 </div>
-
+ 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
     @if($votingEvent)
@@ -55,7 +58,7 @@
             colorLight : "#ffffff",
             correctLevel : QRCode.CorrectLevel.H
         });
-
+ 
         document.getElementById('copy-voting-url').addEventListener('click', function() {
             const input = document.getElementById('voting-url');
             input.select();
@@ -72,7 +75,32 @@
                 showCopyFeedback();
             }
         });
-
+ 
+        document.getElementById('download-qr-btn').addEventListener('click', function() {
+            const container = document.getElementById('qrcode');
+            const canvas = container.querySelector('canvas');
+            const img = container.querySelector('img');
+ 
+            let dataUrl = null;
+            if (canvas) {
+                dataUrl = canvas.toDataURL('image/png');
+            } else if (img && img.src) {
+                dataUrl = img.src;
+            }
+ 
+            if (!dataUrl) {
+                alert('Unable to export QR code. Please try a different browser.');
+                return;
+            }
+ 
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'voting-qr.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+ 
         function showCopyFeedback() {
             const btn = document.getElementById('copy-voting-url');
             const original = btn.textContent;
