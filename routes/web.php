@@ -40,16 +40,7 @@ Route::post('email/verify', [EmailVerificationController::class, 'verify'])
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])
     ->name('verification.resend');
 
-// Public voting route for voters
-Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
-    ->name('voting.public');
 
-Route::post('/voting/{token}/submit', [VotingController::class, 'submitVote'])
-    ->name('voting.submit');
-
-// PRG success page after submitting a vote
-Route::get('/voting/{token}/success', [VotingController::class, 'voteSuccess'])
-    ->name('voting.success');
 
 // Authenticated user routes (dashboard, profile) protected by auth + verified
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -58,6 +49,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //     return redirect()->route('voting.create');
     // })->name('dashboard');
 
+    
+});
+
+// Middleware Role check. 2 = Creator, 1 = Voter
+Route::middleware(['auth', 'verified','role:2'])->group(function () {
+    
     Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
 
 
@@ -87,4 +84,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/terms', function () {
             return view('term-condition.terms-for-tariff-selection'); // resources/views/terms.blade.php
         })->name('terms.show');
+});
+
+// Middleware Role check. 2 = Creator, 1 = Voter
+Route::middleware(['auth', 'verified','role:1'])->group(function () {
+    
+    // Public voting route for voters
+    Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
+        ->name('voting.public');
+
+    Route::post('/voting/{token}/submit', [VotingController::class, 'submitVote'])
+        ->name('voting.submit');
+
+    // PRG success page after submitting a vote
+    Route::get('/voting/{token}/success', [VotingController::class, 'voteSuccess'])
+        ->name('voting.success');
 });
