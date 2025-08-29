@@ -46,7 +46,8 @@ class GoogleAuthController extends Controller
             }
 
             $email = strtolower($googleUser->getEmail());
-            $roleInt = session('signup_role', User::ROLE_VOTER);
+
+            $roleInt = session('signup_role');
 
             $data = [
                 'first_name'        => $googleUser->user['given_name'] ?? '',
@@ -60,9 +61,7 @@ class GoogleAuthController extends Controller
 
             // If user exists: update; otherwise create new user (email set)
             $user = User::where('email', $email)->first();
-            if ($user) {
-                $user->update($data);
-            } else {
+            if (!$user) {
                 $user = User::create(array_merge(['email' => $email], $data));
             }
 
@@ -71,8 +70,12 @@ class GoogleAuthController extends Controller
 
             // Log user in
             Auth::login($user, true);
-
-            return redirect()->intended(route('dashboard'));
+            if ($user->role == '2') {
+                return redirect()->intended('/realized');
+            }
+            if ($user->role == '1') {
+                return redirect()->intended('/voter');
+            }
         } catch (\Throwable $e) {
             Log::error('Google login error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->route('login')

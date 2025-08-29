@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Reward;
 use App\Models\VotingEvent;
 use App\Models\VotingEventOption;
+use App\Models\VotingEventVote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -464,12 +465,14 @@ class VotingController extends Controller
             return view('voting.public.ended', compact('votingEvent'));
         }
 
+        if (!Auth::check() || !Auth::user()->isVoter()) {
+            session(['url.intended' => route('voting.public', ['token' => $token])]);
+            return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
+        }
+
         return view('voting.public.vote', compact('votingEvent'));
     }
 
-    /**
-     * Submit a vote and decrease remaining votes count
-     */
     public function submitVote(Request $request, $token)
     {
         $votingEvent = VotingEvent::with('options')
@@ -491,12 +494,27 @@ class VotingController extends Controller
             return back()->with('error', 'Voting has ended.');
         }
 
+        
+        if (!Auth::check() || !Auth::user()->isVoter()) {
+            session(['url.intended' => route('voting.public', ['token' => $token])]);
+            return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
+        }
+
         // Validate the request
         $request->validate([
             'selected_option' => 'required|exists:voting_event_options,id',
         ]);
 
-        // Resolve purchased tariff (relation or fallback via booking)
+        $email = strtolower(trim(Auth::user()->email));
+
+        $alreadyVoted = VotingEventVote::where('voting_event_id', $votingEvent->id)
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->exists();
+        if ($alreadyVoted) {
+            return back()->with('error', 'You have already voted for this event.');
+        }
+
+        
         $purchasedTariff = $votingEvent->purchasedTariff;
         if (! $purchasedTariff && $votingEvent->booking_id) {
             $purchasedTariff = PurchasedTariff::where('booking_id', $votingEvent->booking_id)->first();
@@ -515,6 +533,12 @@ class VotingController extends Controller
             // Decrease the remaining votes count and increase total votes cast on purchased tariff
             $purchasedTariff->decrement('remaining_votes');
             $purchasedTariff->increment('votes_count');
+
+            VotingEventVote::create([
+                'voting_event_id' => $votingEvent->id,
+                'voting_event_option_id' => $selectedOption->id,
+                'email' => $email,
+            ]);
 
             DB::commit();
 
@@ -563,12 +587,78 @@ class VotingController extends Controller
             }
         }
 
-        // If still missing, avoid null dereference by redirecting to event page
+    // If still missing, avoid null dereference by redirecting to event page
         if (! $selectedOption) {
             return redirect()->route('voting.public', ['token' => $token])
                 ->with('status', 'Thank you for voting.');
         }
 
         return view('voting.public.success', compact('votingEvent', 'selectedOption'));
+    }
+
+    /**
+     * Mark current in-progress booking as completed and redirect to realized list.
+     */
+    public function complete(Request $request)
+    {
+        $request->validate([
+            'booking_id' => ['required', 'integer', 'exists:bookings,id'],
+        ]);
+
+        $booking = Booking::where('id', $request->booking_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        // Validate all steps are completed before allowing completion
+        $errors = [];
+
+        // Step 1: Tariff selected
+        if (empty($booking->tariff_id)) {
+            $errors[] = 'Tariff is not selected.';
+        }
+
+        // Step 2: Payment successful
+        if (empty($booking->payment_status) || strtolower($booking->payment_status) !== 'succeeded') {
+            $errors[] = 'Payment has not been completed.';
+        }
+
+        // Step 3: Reward info exists
+        $reward = $booking->reward;
+        if (! $reward || empty(trim((string) $reward->name))) {
+            $errors[] = 'Reward information is incomplete.';
+        }
+
+        // Step 4: Voting event details with >= 2 options
+        $event = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
+        if (! $event) {
+            $errors[] = 'Voting event is not created.';
+        } else {
+            if (empty(trim((string) $event->title)) || empty(trim((string) $event->question))) {
+                $errors[] = 'Voting event title or question is missing.';
+            }
+            if (! $event->start_at || ! $event->end_at || $event->end_at->lte($event->start_at)) {
+                $errors[] = 'Voting event start/end time is invalid.';
+            }
+            $optionCount = $event->options ? $event->options->filter(function ($o) { return !empty(trim((string)$o->option_text)); })->count() : 0;
+            if ($optionCount < 2) {
+                $errors[] = 'Please provide at least two voting options.';
+            }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->route('voting.create.step', ['step' => 5])
+                ->with('complete_errors', $errors)
+                ->with('error', 'Please resolve the issues before finishing.');
+        }
+
+        $booking->is_completed = '1';
+        $booking->booking_status = 'Completed';
+        $booking->save();
+
+        session()->forget('booking_id');
+        session()->forget('voting.voting_event_id');
+        session()->forget('voting.selected_tariff');
+
+        return redirect()->route('voting.realized')->with('status', 'Voting form marked as completed.');
     }
 }

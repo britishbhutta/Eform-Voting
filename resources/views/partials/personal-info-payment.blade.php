@@ -213,6 +213,7 @@
         </div>
     </div>
 
+
 <div id="payment-success" class="text-center d-none">
     <div class="d-flex justify-content-center align-items-center flex-column">
         <div class="rounded-circle bg-success d-flex justify-content-center align-items-center"
@@ -224,19 +225,13 @@
 </div>
 
 <div class="d-flex justify-content-between mt-4">
+
     @php
-        $prev = ($currentStep ?? 2) - 1;
-        $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
- 
         $nextStep = ($currentStep ?? 2) + 1;
         $nextBase = route('voting.create.step', ['step' => $nextStep]);
         $qs = request()->getQueryString();
         $nextUrl = $nextBase . ($qs ? ('?' . $qs) : '');
     @endphp
-
-    <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
-
-    <button type="button" id="rewardNextBtn" class="btn btn-success" disabled>Next</button>
 </div>
 
 <script src="https://js.stripe.com/v3/"></script>
@@ -304,16 +299,24 @@
                 data: form.serialize(),
                 success: function (response) {
                     showToast(response.message || 'Payment successful!', "success");
+
                     
                      $("#payment-form-wrapper")
                         .removeClass("d-block")
                         .addClass("d-none");
 
-                    $("#payment-success")
-                        .removeClass("d-none")
-                        .addClass("d-block");
-                     $("#rewardNextBtn").prop("disabled", false);
-                      
+
+                    var successWrapper = document.getElementById('payment-success-wrapper');
+                    if (successWrapper) {
+                        successWrapper.classList.remove('d-none');
+                        successWrapper.classList.add('d-block');
+                        successWrapper.style.display = 'block';
+                    }
+
+                    var nextBtn = document.getElementById('rewardNextBtn');
+                    if (nextBtn) {
+                        nextBtn.disabled = false;
+                    }
                 },
                 error: function (xhr) {
                     if (xhr.status === 422) {

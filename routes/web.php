@@ -72,6 +72,10 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
 
     Route::post('/voting/select-tariff', [VotingController::class, 'selectTariff'])->name('voting.select_tariff');
 
+    // Mark booking as completed
+    Route::post('/voting/complete', [VotingController::class, 'complete'])
+        ->name('voting.complete');
+
     Route::post('/voting/set/{id}', function ($id) {
     return redirect()->route('voting.create.step', [
         'step' => 3,
