@@ -1,7 +1,8 @@
-@php
-    // Ensure variable exists
-    $selectedTariff = $selectedTariff ?? null;
-@endphp
+@push('styles')
+<style>
+      <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</style>
+@endpush
 
  @if($selectedTariff)
         <div class="mb-3">
@@ -13,13 +14,32 @@
         </div>
     @endif
 
-<div class="container mt-3">
+ 
+    <div class="captcha-container" id="captcha-container">
+        <div class="captcha-success" id="captcha-success">
+            <i class="bi bi-check-circle"></i>
+            <h4>Verification Successful!</h4>
+            <p>You have been verified as human. Please proceed with your payment.</p>
+        </div>
+        
+        <div id="captcha-widget">
+            <div class="form-label">Please verify you're human</div>
+            <div class="cf-turnstile"
+                 data-sitekey="{{ config('services.turnstile.site_key') }}"
+                 data-theme="dark"
+                 data-callback="onCaptchaSuccess">
+            </div>
+        </div>
+    </div>
+
+    <div class="payment-form-container" id="payment-form-wrapper">
+        <div class="container mt-3">
     <div id="payment-form-container">
         <form action="{{ route('stripe.payment') }}" id="stripe-form" method="POST">
             @csrf
             <input type="hidden" name="stripeToken" id="stripe-token">
+            <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
             <input type="hidden" name="selectedTariffId" value="{{ $selectedTariff->id }}">
-            <!-- <input type="hidden" name="payableAmount" id="payableAmount" value="2300"> -->
             <div class="row">
             <div class="col-md-6">
                 <div class="card shadow-sm p-4">
@@ -181,14 +201,15 @@
             </div>
         </form>
     </div>
-    <div id="payment-success" class="text-center d-none }}">
-        <div class="d-flex justify-content-center align-items-center flex-column">
-            <div class="rounded-circle bg-success d-flex justify-content-center align-items-center"
-                style="width:120px; height:120px;">
-                <i class="bi bi-check-lg text-white" style="font-size:60px;"></i>
-            </div>
-            <h2 class="mt-4 text-success">Payment Received</h2>
+</div>
+
+<div id="payment-success" class="text-center d-none }}">
+    <div class="d-flex justify-content-center align-items-center flex-column">
+        <div class="rounded-circle bg-success d-flex justify-content-center align-items-center"
+            style="width:120px; height:120px;">
+            <i class="bi bi-check-lg text-white" style="font-size:60px;"></i>
         </div>
+        <h2 class="mt-4 text-success">Payment Received</h2>
     </div>
 </div>
 
@@ -205,23 +226,21 @@
 
     <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
 
-    {{-- Changed type to button so it doesn't submit --}}
     <button type="button" id="rewardNextBtn" class="btn btn-success" disabled>Next</button>
 </div>
 
 <script src="https://js.stripe.com/v3/"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script type="text/javascript">
 
     var stripe = Stripe('{{ env("STRIPE_KEY") }}');
     var elements = stripe.elements();
 
-    // Create individual Elements
     var cardNumber = elements.create('cardNumber');
     var cardExpiry = elements.create('cardExpiry');
     var cardCvc = elements.create('cardCvc');
     var postalCode = elements.create('postalCode');
 
-    // Mount them into divs
     cardNumber.mount('#card-number-element');
     cardExpiry.mount('#card-expiry-element');
     cardCvc.mount('#card-cvc-element');
@@ -249,7 +268,7 @@
                 success: function (response) {
                     showToast(response.message || 'Payment successful!', "success");
 
-                     $("#payment-form-container")
+                     $("#payment-form-wrapper")
                         .removeClass("d-block")
                         .addClass("d-none");
 
@@ -275,9 +294,10 @@
             });
         }
     });
-
-    // Helper: reset form state on error
+    
     function resetFormState() {
+        let form = $('#stripe-form');
+        let submitBtn = form.find('button[type="submit"]');
         form.find('input, select, textarea, button').prop('disabled', false);
         submitBtn.removeClass('btn-success').addClass('btn-primary').html('Pay');
     }
@@ -292,12 +312,23 @@ $(document).on('click', '#rewardNextBtn', function() {
             text: message,
             duration: 6000,
             close: true,
-            gravity: "top", // top or bottom
-            position: "right", // left, center, or right
+            gravity: "top", 
+            position: "right", 
             backgroundColor: type === "success" ? "#2E8B57" :
                                 type === "error" ? "#B22222" :
                                 type === "warning" ? "orange" : "#333",
-            stopOnFocus: true, // Prevents dismissing on hover
+            stopOnFocus: true, 
         }).showToast();
+    }
+    
+    function onCaptchaSuccess(response) {
+        document.getElementById('cf-turnstile-response').value = response;
+        
+        document.getElementById('captcha-widget').style.display = 'none';
+        document.getElementById('captcha-success').style.display = 'block';
+        setTimeout(function() {
+            document.getElementById('captcha-container').style.display = 'none';
+            document.getElementById('payment-form-wrapper').style.display = 'block';
+        }, 1000);
     }
 </script>

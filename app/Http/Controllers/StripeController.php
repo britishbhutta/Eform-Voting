@@ -8,6 +8,7 @@ use App\Models\PurchasedTariff;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 
 
@@ -15,7 +16,7 @@ class StripeController extends Controller
 {
     public function store(Request $request)
     {
-     
+
         $rules = [
             'stripeToken'   => 'required|string',
             'selectedTariffId' => 'required|exists:tariffs,id',
@@ -45,6 +46,19 @@ class StripeController extends Controller
             ], 422);
         }
 
+        // Verify Cloudflare Turnstile
+        $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret' => config('services.turnstile.secret_key'),
+            'response' => $request->input('cf-turnstile-response'),
+            'remoteip' => $request->ip(),
+        ]);
+
+        if (!($turnstileResponse->json('success') ?? false)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'CAPTCHA verification failed. Please try again.'
+            ], 422);
+        }
 
         $selectedTariff = Tariff::find($request->selectedTariffId);
 
@@ -80,12 +94,6 @@ class StripeController extends Controller
         $booking->payment_method   = 'stripe';
         $booking->save();
 
-
-        // IMPORTANT: store booking id in session so step 3 (reward) can pick it up
-       // session(['voting.booking_id' => $booking->id]);
-      
-
-        // Create PurchasedTariff record
         try {
             $totalVotes = (int) ($selectedTariff->available_votes ?? 0);
             $purchased = PurchasedTariff::create([
@@ -106,7 +114,6 @@ class StripeController extends Controller
             ]);
         }
 
-        // store booking & purchased id in session for the wizard flow
         session([
             'voting.booking_id' => $booking->id,
             'voting.purchased_tariff_id' => $purchased->id,

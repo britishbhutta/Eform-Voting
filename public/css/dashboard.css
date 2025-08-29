@@ -395,7 +395,6 @@ input[type="time"] {
     box-shadow: none !important;
 }
 
-
 /* -------------------------
    Voting Results Styles
    ------------------------- */
@@ -403,4 +402,30 @@ input[type="time"] {
 .table-green thead th {
     background: #0b9b2a;
     color: #fff;
+}
+
+/* cloudflare captcha */
+
+.captcha-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+.payment-form-container {
+    display: none;
+}
+
+.captcha-success {
+    display: none;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.captcha-success i {
+    font-size: 48px;
+    color: #28a745;
+    margin-bottom: 15px;
 }
