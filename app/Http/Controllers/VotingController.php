@@ -23,13 +23,19 @@ class VotingController extends Controller
 {
     public function realized(Request $request)
     {
-       $bookings = Booking::where('user_id', auth()->id())->get();
-       
-        if ($bookings->isEmpty()) {
-            return redirect()->route('voting.create.step', 1);
+        $previousUrl = url()->previous();
+        $bookings = Booking::where('user_id', auth()->id())->get();
+        if (str_contains($previousUrl, 'login')) {
+            if ($bookings->isEmpty()) {
+                return redirect()->route('voting.create.step', 1);
+            }else{
+                return view('voting.realized', compact('bookings'));
+            }
         }else{
             return view('voting.realized', compact('bookings'));
         }
+
+        
     }
 
     public function step($step, Request $request,)
@@ -313,6 +319,8 @@ class VotingController extends Controller
         }
 
         $countries = ($step === 2) ? Country::active()->orderBy('name')->get() : null;
+        $localTime =  null;
+        
 
         $booking = Booking::where('user_id',auth()->id())
         ->where('tariff_id',$selectedId)
@@ -358,9 +366,15 @@ class VotingController extends Controller
             if (session()->has('booking_id')) {
                 $bookingId = session('booking_id');
             }
-           
-
+            $country = Country::find( $booking->country);
             
+            $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+            $timezone = $timezones[0] ?? 'UTC'; 
+            $dt = new \DateTime('now', new \DateTimeZone($timezone));
+            $gmtOffset = $dt->format('P'); 
+
+            $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
+
             if ($bookingId) {
                 $dbVoting = VotingEvent::with('options')->where('booking_id' ,$bookingId)->first();
             }
@@ -412,6 +426,7 @@ class VotingController extends Controller
             'rewardData'     => $rewardData,
             'votingData'     => $votingData,
             'votingEvent'    => $votingEvent,
+            'localTime'     => $localTime,
         ]);
     }
 

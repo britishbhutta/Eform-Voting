@@ -83,7 +83,7 @@ class StripeController extends Controller
         $booking->address          = $validated['address'];
         $booking->city             = $validated['city'];
         $booking->zip              = $validated['zip'];
-        $booking->country          = $validated['country'];
+        $booking->country = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
 
         $booking->booking_reference = strtoupper(uniqid('BOOK-'));
         $booking->price            = $selectedTariff->price_cents / 100;
