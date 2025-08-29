@@ -24,6 +24,7 @@
                                 <th>Vote Cast</th>
                                 <th>Results (%)</th>
                                 <th>File with email</th>
+                                <th>QR</th>
                                 <th>Tariff</th>
                                 <th>Status</th>
                                 </tr>
@@ -66,6 +67,21 @@
                                             </td>
                                             <td>-</td>
                                             <td>{{ $booking->tariff->title }}</td>
+                                            <td>
+                                                @if($votingEvent)
+                                                    @php $publicUrl = route('voting.public', ['token' => $votingEvent->token]); @endphp
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm open-qr-modal"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#qrModal"
+                                                            data-url="{{ $publicUrl }}"
+                                                            data-title="{{ $votingEvent->title }}">
+                                                        Download QR
+                                                    </button>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                             <td>Completed</td>
                                         </tr>
                                     @else
@@ -105,6 +121,21 @@
                                             <td>-</td>
                                             <td>{{ $booking->tariff->title }}</td>
                                             <td>
+                                                @if($votingEvent)
+                                                    @php $publicUrl = route('voting.public', ['token' => $votingEvent->token]); @endphp
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm open-qr-modal"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#qrModal"
+                                                            data-url="{{ $publicUrl }}"
+                                                            data-title="{{ $votingEvent->title }}">
+                                                        Download QR
+                                                    </button>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
                                                 <form action="{{ route('voting.set', $booking->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="btn btn-primary btn-sm">Incomplete</button>
@@ -122,3 +153,66 @@
         </div>
     </div>
 </x-app-layout>
+
+{{-- QR Modal --}}
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrModalLabel">Voting Link QR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrCanvasWrapper" class="mb-3"></div>
+                <div class="input-group">
+                    <input type="text" id="qrLinkInput" class="form-control" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="copyLinkBtn">Copy</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <a id="downloadQrBtn" class="btn btn-primary" download="voting-qr.png">Download PNG</a>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalEl = document.getElementById('qrModal');
+            const qrWrapper = document.getElementById('qrCanvasWrapper');
+            const linkInput = document.getElementById('qrLinkInput');
+            const downloadBtn = document.getElementById('downloadQrBtn');
+            const copyBtn = document.getElementById('copyLinkBtn');
+
+            document.querySelectorAll('.open-qr-modal').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const url = this.getAttribute('data-url');
+                    const title = this.getAttribute('data-title') || 'Voting Link QR';
+                    document.getElementById('qrModalLabel').innerText = title;
+                    linkInput.value = url;
+                    qrWrapper.innerHTML = '';
+                    const canvas = document.createElement('canvas');
+                    qrWrapper.appendChild(canvas);
+                    QRCode.toCanvas(canvas, url, { width: 240, margin: 2 }, function (error) {
+                        if (error) console.error(error);
+                        try {
+                            downloadBtn.href = canvas.toDataURL('image/png');
+                        } catch (e) {
+                            downloadBtn.removeAttribute('href');
+                        }
+                    });
+                });
+            });
+
+            copyBtn.addEventListener('click', function () {
+                linkInput.select();
+                linkInput.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    copyBtn.innerText = 'Copied!';
+                    setTimeout(() => copyBtn.innerText = 'Copy', 1200);
+                } catch (e) {}
+            });
+        });
+    </script>
+</div>

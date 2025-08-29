@@ -86,6 +86,17 @@
 
                         @include('partials.qr-code', ['booking' => $booking ?? null])
 
+                        @if(session('complete_errors'))
+                            <div class="alert alert-danger mt-3">
+                                <div class="fw-bold mb-2">Please resolve the following before finishing:</div>
+                                <ul class="mb-0">
+                                    @foreach((array) session('complete_errors') as $msg)
+                                        <li>{{ $msg }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         
                         {{-- Wizard actions area --}}
                         <div class="d-flex justify-content-between mt-4">
@@ -95,7 +106,7 @@
                                 $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
                             @endphp
                             <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
-                            <a href="{{ route('voting.create.step', ['step' => 1] + (request()->query() ? request()->query() : [])) }}" class="btn btn-primary">Finish</a>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#finishOverviewModal">Finish</button>
                         </div>
                     @endif
                 @endif
@@ -107,6 +118,83 @@
             
         @endif
     </div>
+
+    @if($currentStep === 5)
+    <div class="modal fade" id="finishOverviewModal" tabindex="-1" aria-labelledby="finishOverviewLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="finishOverviewLabel">Review your voting setup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>1) Tariff</h6>
+                        <div class="text-muted">{{ $selectedTariff?->title ?? '-' }} — {{ $selectedTariff ? number_format($selectedTariff->price_cents/100,2) . ' ' . $selectedTariff->currency : '' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <h6>2) Billing / Booking</h6>
+                        @if(!empty($booking))
+                            <div class="small text-muted">
+                                <div><strong>Name:</strong> {{ $booking->name ?? '-' }}</div>
+                                <div><strong>Email:</strong> {{ $booking->email ?? '-' }}</div>
+                                <div><strong>Address:</strong> {{ $booking->address ?? '-' }}, {{ $booking->city ?? '-' }} {{ $booking->zip ?? '' }}</div>
+                                <div><strong>Country:</strong> {{ $booking->country ?? '-' }}</div>
+                                <div><strong>Reference:</strong> {{ $booking->booking_reference ?? '-' }}</div>
+                                <div><strong>Payment:</strong> {{ ucfirst($booking->payment_method ?? '-') }} ({{ $booking->payment_status ?? '-' }})</div>
+                            </div>
+                        @else
+                            <div class="text-danger">No booking found.</div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <h6>3) Reward</h6>
+                        @php $reward = $booking?->reward; @endphp
+                        <div class="small text-muted">
+                            <div><strong>Name:</strong> {{ $reward->name ?? '-' }}</div>
+                            <div><strong>Description:</strong> {{ $reward->description ?? '-' }}</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <h6>4) Voting Event</h6>
+                        @php $overviewEvent = isset($votingEvent) ? $votingEvent : (isset($booking) ? \App\Models\VotingEvent::with('options')->where('booking_id', $booking->id)->first() : null); @endphp
+                        <div class="small text-muted">
+                            <div><strong>Title:</strong> {{ $overviewEvent?->title ?? '-' }}</div>
+                            <div><strong>Question:</strong> {{ $overviewEvent?->question ?? '-' }}</div>
+                            <div><strong>Start:</strong> {{ $overviewEvent?->start_at ? \Carbon\Carbon::parse($overviewEvent->start_at)->format('M d, Y H:i') : '-' }}</div>
+                            <div><strong>End:</strong> {{ $overviewEvent?->end_at ? \Carbon\Carbon::parse($overviewEvent->end_at)->format('M d, Y H:i') : '-' }}</div>
+                            <div><strong>Options:</strong>
+                                @if($overviewEvent && $overviewEvent->options->isNotEmpty())
+                                    <ul class="mb-0">
+                                        @foreach($overviewEvent->options as $opt)
+                                            <li>{{ $opt->option_text }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    -
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <h6>5) QR Code</h6>
+                        <div class="small text-muted">Your QR has been generated in Step 5.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    @if(!empty($booking))
+                    <form method="POST" action="{{ route('voting.complete') }}">
+                        @csrf
+                        <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                        <button type="submit" class="btn btn-success">Confirm Finish</button>
+                    </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     @push('scripts')
     <script>
