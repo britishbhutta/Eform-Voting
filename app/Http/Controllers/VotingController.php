@@ -23,12 +23,11 @@ class VotingController extends Controller
     public function realized(Request $request)
     {
        $bookings = Booking::where('user_id', auth()->id())->get();
-
-
-        if (!empty($bookings)) {
-            return view('voting.realized', compact('bookings'));
+       
+        if ($bookings->isEmpty()) {
+            return redirect()->route('voting.create.step', 1);
         }else{
-            return redirect()->route('voting.create', ['step'=>1]);
+            return view('voting.realized', compact('bookings'));
         }
     }
 
