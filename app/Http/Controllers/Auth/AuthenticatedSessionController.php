@@ -24,9 +24,9 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         // Validate hCaptcha response exists
-        $request->validate([
-            'h-captcha-response' => 'required',
-        ]);
+        // $request->validate([
+        //     'h-captcha-response' => 'required',
+        // ]);
 
         // Verify hCaptcha with API
         $hcaptchaResponse = Http::asForm()->post('https://hcaptcha.com/siteverify', [
@@ -45,7 +45,19 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        return redirect()->intended(route('voting.realized', absolute: false));
+        $user = $request->user();
+        
+        // 🔑 Redirect by role
+        if ($user->role == '2') {
+            return redirect()->intended('/realized');
+        }
+
+        if ($user->role == '1') {
+            return redirect()->intended('/voter');
+        }
+
+        // fallback (e.g. admin or others)
+        return redirect()->intended('/dashboard');
     }
 
     /**

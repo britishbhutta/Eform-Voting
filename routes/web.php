@@ -51,13 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     
 });
-
+Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
 // Middleware Role check. 2 = Creator, 1 = Voter
 Route::middleware(['auth', 'verified','role:2'])->group(function () {
     
-    Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
-
-
     Route::match(['get', 'post'], '/voting/create/step/{step}', [VotingController::class, 'step'])
         ->whereNumber('step')
         ->name('voting.create.step');
@@ -88,7 +85,9 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
 
 // Middleware Role check. 2 = Creator, 1 = Voter
 Route::middleware(['auth', 'verified','role:1'])->group(function () {
-    
+    Route::get('/voter', function(){
+        return view('voting.voter.index');
+    });
     // Public voting route for voters
     Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
         ->name('voting.public');
