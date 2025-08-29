@@ -1,5 +1,4 @@
 {{-- resources/views/partials/details-form.blade.php --}}
-
 @php
     $currentStep = $currentStep ?? 4;
 
@@ -37,12 +36,22 @@
 
     <div class="row g-3">
         <div class="col-md-6">
-            <label for="start_at" class="form-label">Voting start (date & time)</label>
+            <label for="start_at" class="form-label">
+                Voting Start (Date & Time) 
+                @if($localTime)
+                    <small class="text-muted"> {{ $localTime }}</small>
+                @endif
+            </label>
             <input type="datetime-local" class="form-control @error('start_at') is-invalid @enderror" id="start_at" name="start_at" required value="{{ old('start_at', $votingData['start_at'] ?? '') }}">
             @error('start_at') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-6">
-            <label for="end_at" class="form-label">Voting end (date & time)</label>
+            <label for="end_at" class="form-label">
+                Voting End (Date & Time)
+                @if($localTime)
+                    <small class="text-muted"> {{ $localTime }}</small>
+                @endif
+            </label>
             <input type="datetime-local" class="form-control @error('end_at') is-invalid @enderror" id="end_at" name="end_at" required value="{{ old('end_at', $votingData['end_at'] ?? '') }}">
             @error('end_at') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
         </div>

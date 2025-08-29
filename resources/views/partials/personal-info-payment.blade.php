@@ -1,7 +1,18 @@
 @push('styles')
+<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 <style>
-      <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+      
+       /* hide unwanted fields from Stripe Address Element */
+        .StripeElement--address input[name="name"],
+        .StripeElement--address input[name="line1"],
+        .StripeElement--address input[name="line2"],
+        .StripeElement--address input[name="city"],
+        .StripeElement--address input[name="postal_code"],
+        .StripeElement--address select[name="country"] {
+            display: none !important;
+        }
 </style>
+
 @endpush
 
  @if($selectedTariff)
@@ -34,176 +45,175 @@
 
     <div class="payment-form-container" id="payment-form-wrapper">
         <div class="container mt-3">
-    <div id="payment-form-container">
-        <form action="{{ route('stripe.payment') }}" id="stripe-form" method="POST">
-            @csrf
-            <input type="hidden" name="stripeToken" id="stripe-token">
-            <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
-            <input type="hidden" name="selectedTariffId" value="{{ $selectedTariff->id }}">
-            <div class="row">
-            <div class="col-md-6">
-                <div class="card shadow-sm p-4">
-                <h5 class="text-center mb-5">Billing information</h5>
+            <div id="payment-form-container">
+                <form action="{{ route('stripe.payment') }}" id="stripe-form" method="POST">
+                    @csrf
+                    <input type="hidden" name="stripeToken" id="stripe-token">
+                    <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
+                    <input type="hidden" name="selectedTariffId" value="{{ $selectedTariff->id }}">
+                    <div class="row">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm p-4">
+                        <h5 class="text-center mb-5">Billing information</h5>
 
-                <!-- Email -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Email*</label>
-                    <div class="col-sm-9">
-                    <input type="email" name="email" class="form-control" placeholder="Enter your email">
-                    </div>
-                </div>
+                        <!-- Email -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Email*</label>
+                            <div class="col-sm-9">
+                            <input type="email" name="email" class="form-control" placeholder="Enter your email">
+                            </div>
+                        </div>
 
-                <!-- Phone -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Phone Number</label>
-                    <div class="col-sm-9">
-                    <div class="input-group">
-                        <span class="input-group-text">+1</span>
-                        <input type="tel" name="phone_number" class="form-control" placeholder="Enter phone number">
-                    </div>
-                    </div>
-                </div>
+                        <!-- Phone -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Phone Number</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <span class="input-group-text">+1</span>
+                                    <input type="tel" name="phone_number" class="form-control" placeholder="Enter phone number">
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Invoice Checkbox (full width) -->
-                <div class="row mb-2">
-                    <div class="col-sm-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="invoice_issued" id="invoiceCompany">
-                        <label class="form-check-label" for="invoiceCompany">
-                        Invoice issued to a company
-                        </label>
-                    </div>
-                    </div>
-                </div>
+                        <!-- Invoice Checkbox (full width) -->
+                        <div class="row mb-2">
+                            <div class="col-sm-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="invoice_issued" id="invoiceCompany">
+                                    <label class="form-check-label" for="invoiceCompany">
+                                    Invoice issued to a company
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Company -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Company*</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="company_name" class="form-control" placeholder="Enter company name">
-                    </div>
-                </div>
+                        <!-- Company -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Company*</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="company_name" class="form-control" placeholder="Enter company name">
+                            </div>
+                        </div>
 
-                <!-- Company ID -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Company ID*</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="company_id" class="form-control" placeholder="Enter company ID">
-                    </div>
-                </div>
+                        <!-- Company ID -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Company ID*</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="company_id" class="form-control" placeholder="Enter company ID">
+                            </div>
+                        </div>
 
-                <!-- Tax/VAT Number -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Tax/VAT Number</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="tax_vat" class="form-control" placeholder="Enter tax/VAT number">
-                    </div>
-                </div>
+                        <!-- Tax/VAT Number -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Tax/VAT Number</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="tax_vat" class="form-control" placeholder="Enter tax/VAT number">
+                            </div>
+                        </div>
 
-                <!-- First Name -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">First Name</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="fname" class="form-control" placeholder="Enter first name">
-                    </div>
-                </div>
+                        <!-- First Name -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">First Name</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="fname" class="form-control" placeholder="Enter first name">
+                            </div>
+                        </div>
 
-                <!-- Last Name -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Last Name</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="lname" class="form-control" placeholder="Enter last name">
-                    </div>
-                </div>
+                        <!-- Last Name -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Last Name</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="lname" class="form-control" placeholder="Enter last name">
+                            </div>
+                        </div>
 
-                <!-- Address -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Address*</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="address" class="form-control" placeholder="Enter address">
-                    </div>
-                </div>
+                        <!-- Address -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">Address*</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="address" class="form-control" placeholder="Enter address">
+                            </div>
+                        </div>
 
-                <!-- City -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">City*</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="city" class="form-control" placeholder="Enter city">
-                    </div>
-                </div>
+                        <!-- City -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">City*</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="city" class="form-control" placeholder="Enter city">
+                            </div>
+                        </div>
 
-                <!-- ZIP -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">ZIP*</label>
-                    <div class="col-sm-9">
-                    <input type="text" name="zip" class="form-control" placeholder="Enter ZIP code">
-                    </div>
-                </div>
+                        <!-- ZIP -->
+                        <div class="row align-items-center mb-2">
+                            <label class="col-sm-3 col-form-label">ZIP*</label>
+                            <div class="col-sm-9">
+                            <input type="text" name="zip" class="form-control" placeholder="Enter ZIP code">
+                            </div>
+                        </div>
 
-                <!-- Country -->
-                <div class="row align-items-center mb-2">
-                    <label class="col-sm-3 col-form-label">Country*</label>
-                    <div class="col-sm-9">
-                    <select name="country" class="form-control">
-                        <option value="">{{ $countries->isEmpty() ? 'No countries available' : 'Select Country' }}</option>
-                        @foreach($countries as $country)
-                            <option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
-                                {{ $country->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                        <!-- Country -->
+                        <select name="country" id="country-select" class="form-control">
+                            <option value="">{{ $countries->isEmpty() ? 'No countries available' : 'Select Country' }}</option>
+                            @foreach($countries as $country)
+                                <option value="{{ $country->id }} {{ $country->code }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                                    {{ $country->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        </div>
                     </div>
-                </div>
-                </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-sm p-4">
+                            <h5 class="text-center mb-4">Payment Method</h5>
+                            <!-- <div  id="card-element" class="form-control">
+                                
+                            </div> -->
+                            <div class="container mt-4">
+                                
+                                <!-- Name on Card -->
+                                <div class="mb-3">
+                                <label for="cardholder-name" class="form-label">Name on Card</label>
+                                <input type="text" name="cardholder_name" id="cardholder-name" class="form-control" placeholder="Enter name on card">
+                                </div>
+
+                                <!-- Card Number -->
+                                <div class="mb-3">
+                                <label for="card-number-element" class="form-label">Card Number</label>
+                                <div id="card-number-element" class="form-control"></div>
+                                </div>
+
+                                <!-- Expiry + CVC -->
+                                <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="card-expiry-element" class="form-label">Expiry Date</label>
+                                    <div id="card-expiry-element" class="form-control"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="card-cvc-element" class="form-label">CVC</label>
+                                    <div id="card-cvc-element" class="form-control"></div>
+                                </div>
+                                </div>
+                                <!-- Region -->
+                                <div class="mb-3" id="region">
+                                
+                                </div>
+                                <!-- Postal Code (optional) -->
+                                <div class="mb-3">
+                                <label for="card-postal-element" class="form-label">Postal Code</label>
+                                <div id="card-postal-element" class="form-control"></div>
+                                </div>
+                            </div>  
+                            <button type="submit" class="btn btn-primary">Pay</button>    
+                        </div>
+                    </div>
+                    </div>
+                </form>
             </div>
-
-            <div class="col-md-6">
-                <div class="card shadow-sm p-4">
-                    <h5 class="text-center mb-4">Payment Method</h5>
-                    <!-- <div  id="card-element" class="form-control">
-                        
-                    </div> -->
-                    <div class="container mt-4">
-                        
-                        <!-- Name on Card -->
-                        <div class="mb-3">
-                        <label for="cardholder-name" class="form-label">Name on Card</label>
-                        <input type="text" name="cardholder_name" id="cardholder-name" class="form-control" placeholder="Enter name on card">
-                        </div>
-
-                        <!-- Card Number -->
-                        <div class="mb-3">
-                        <label for="card-number-element" class="form-label">Card Number</label>
-                        <div id="card-number-element" class="form-control"></div>
-                        </div>
-
-                        <!-- Expiry + CVC -->
-                        <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="card-expiry-element" class="form-label">Expiry Date</label>
-                            <div id="card-expiry-element" class="form-control"></div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="card-cvc-element" class="form-label">CVC</label>
-                            <div id="card-cvc-element" class="form-control"></div>
-                        </div>
-                        </div>
-
-                        <!-- Postal Code (optional) -->
-                        <div class="mb-3">
-                        <label for="card-postal-element" class="form-label">Postal Code</label>
-                        <div id="card-postal-element" class="form-control"></div>
-                        </div>
-                    </div>  
-                    <button type="submit" class="btn btn-primary">Pay</button>    
-                </div>
-            </div>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
 
-<div id="payment-success" class="text-center d-none }}">
+<div id="payment-success" class="text-center d-none">
     <div class="d-flex justify-content-center align-items-center flex-column">
         <div class="rounded-circle bg-success d-flex justify-content-center align-items-center"
             style="width:120px; height:120px;">
@@ -246,6 +256,33 @@
     cardCvc.mount('#card-cvc-element');
     postalCode.mount('#card-postal-element');
 
+        let shippingAddressElement = null;
+
+    $('#country-select').on('change', function () {
+        let selectedCountry = $(this).val();
+        let selectedCountryCode = selectedCountry.split(" ").slice(1).join(" "); // country code (like "US", "DE", etc.)
+        if (!selectedCountry) {
+            return; // no country selected
+        }
+        
+        if (shippingAddressElement) {
+            shippingAddressElement.unmount();
+            shippingAddressElement = null;
+        }
+        elements = stripe.elements();
+        // Create Address element but hide everything except "region"
+        shippingAddressElement = elements.create('address', {
+            mode: 'billing',
+            defaultValues: {
+            address: {
+                country: selectedCountryCode   // force USA
+            }
+        }
+            });
+
+        shippingAddressElement.mount('#region');
+    });
+
     var nextUrl = @json($nextUrl);
     
     $(document).on('submit', '#stripe-form', function(e) {
@@ -267,7 +304,7 @@
                 data: form.serialize(),
                 success: function (response) {
                     showToast(response.message || 'Payment successful!', "success");
-
+                    
                      $("#payment-form-wrapper")
                         .removeClass("d-block")
                         .addClass("d-none");
@@ -331,4 +368,19 @@ $(document).on('click', '#rewardNextBtn', function() {
             document.getElementById('payment-form-wrapper').style.display = 'block';
         }, 1000);
     }
+    /* $(document).on('change', '#country-select', function () {
+        let countryName = $("#country-select option:selected").text();
+        let regionDiv = $("#region");
+
+        regionDiv.empty(); // clear previous content
+
+        // Option 1: just show selected country as readonly
+        regionDiv.html(`
+            <label for="region-input" class="form-label">Region/State</label>
+            <input type="text" id="region-input" name="region" value=${countryName}
+                class="form-control" placeholder="Enter region/state" readonly />
+        `);
+
+    }); */
+
 </script>
