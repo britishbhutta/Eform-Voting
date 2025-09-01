@@ -18,8 +18,8 @@
                     <h6>Voting Event Details:</h6>
                     <p><strong>Title:</strong> {{ $votingEvent->title }}</p>
                     <p><strong>Question:</strong> {{ $votingEvent->question }}</p>
-                    <p><strong>Start Date:</strong> {{ $votingEvent->start_at ? Carbon\Carbon::parse($votingEvent->start_at)->format('M d, Y H:i') : 'Not set' }}</p>
-                    <p><strong>End Date:</strong> {{ $votingEvent->end_at ? Carbon\Carbon::parse($votingEvent->end_at)->format('M d, Y H:i') : 'Not set' }}</p>
+                    <p><strong>Start Date:</strong> {{ $votingEvent->start_at ? Carbon\Carbon::parse($votingEvent->start_at)->format('M d, Y H:i') : 'Not set' }}{{ $localTime }}</p>
+                    <p><strong>End Date:</strong> {{ $votingEvent->end_at ? Carbon\Carbon::parse($votingEvent->end_at)->format('M d, Y H:i') : 'Not set' }}{{ $localTime }}</p>
                 </div>
                 <div class="col-md-6 text-center">
                     <h6>QR Code for Voters</h6>

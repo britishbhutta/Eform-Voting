@@ -451,7 +451,16 @@ class VotingController extends Controller
             if (!$votingEvent && $booking) {
                 $votingEvent = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
             }
+            $country = Country::find( $booking->country);
+            
+            $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+            $timezone = $timezones[0] ?? 'UTC'; 
+            $dt = new \DateTime('now', new \DateTimeZone($timezone));
+            $gmtOffset = $dt->format('P'); 
+
+            $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
         }
+        
 
 
         return view('voting.step', [
