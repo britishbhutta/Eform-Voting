@@ -161,8 +161,11 @@
                         <div class="small text-muted">
                             <div><strong>Title:</strong> {{ $overviewEvent?->title ?? '-' }}</div>
                             <div><strong>Question:</strong> {{ $overviewEvent?->question ?? '-' }}</div>
-                            <div><strong>Start:</strong> {{ $overviewEvent?->start_at ? \Carbon\Carbon::parse($overviewEvent->start_at)->format('M d, Y H:i') : '-' }}{{ $localTime }}</div>
-                            <div><strong>End:</strong> {{ $overviewEvent?->end_at ? \Carbon\Carbon::parse($overviewEvent->end_at)->format('M d, Y H:i') : '-' }}{{ $localTime }}</div>
+
+
+                            <div><strong>Start:</strong> {{ $overviewEvent?->start_at ? \Carbon\Carbon::parse($overviewEvent->start_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') : '-' }}</div>
+                            <div><strong>End:</strong> {{ $overviewEvent?->end_at ? \Carbon\Carbon::parse($overviewEvent->end_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') : '-' }}</div>
+
                             <div><strong>Options:</strong>
                                 @if($overviewEvent && $overviewEvent->options->isNotEmpty())
                                     <ul class="mb-0">

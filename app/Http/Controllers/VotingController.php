@@ -21,6 +21,26 @@ use App\Models\PurchasedTariff;
 
 class VotingController extends Controller
 {
+   
+    private function getVotingEventTimezone($votingEvent)
+    {
+        if (!$votingEvent || !$votingEvent->booking_id) {
+            return config('app.timezone', 'UTC');
+        }
+
+        $booking = Booking::find($votingEvent->booking_id);
+        if (!$booking || !$booking->country) {
+            return config('app.timezone', 'UTC');
+        }
+
+        $country = Country::find($booking->country);
+        if (!$country || !$country->code) {
+            return config('app.timezone', 'UTC');
+        }
+
+        $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+        return $timezones[0] ?? config('app.timezone', 'UTC');
+    }
     public function realized(Request $request)
     {
         $previousUrl = url()->previous();
@@ -246,11 +266,24 @@ class VotingController extends Controller
                         }
                     }
 
+                 
+                    $countryTimezone = config('app.timezone', 'UTC');
+                    if ($bookingId) {
+                        $booking = Booking::find($bookingId);
+                        if ($booking && $booking->country) {
+                            $country = Country::find($booking->country);
+                            if ($country && $country->code) {
+                                $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+                                $countryTimezone = $timezones[0] ?? config('app.timezone', 'UTC');
+                            }
+                        }
+                    }
+
                     $votingPayload = [
                         'title'      => $data['form_name'],
                         'question'   => $data['question'],
-                        'start_at'   => Carbon::createFromFormat('Y-m-d\\TH:i', $data['start_at'], config('app.timezone')),
-                        'end_at'     => Carbon::createFromFormat('Y-m-d\\TH:i', $data['end_at'], config('app.timezone')),
+                        'start_at'   => Carbon::createFromFormat('Y-m-d\\TH:i', $data['start_at'], $countryTimezone)->utc(),
+                        'end_at'     => Carbon::createFromFormat('Y-m-d\\TH:i', $data['end_at'], $countryTimezone)->utc(),
                         'purchased_tariff_id' => $purchasedTariffId ?? null,
                         'booking_id' => $bookingId ?: null,
                         'status'     => 1,
@@ -320,6 +353,7 @@ class VotingController extends Controller
 
         $countries = ($step === 2) ? Country::active()->orderBy('name')->get() : null;
         $localTime =  null;
+        $timezone = null;
         
 
         $booking = Booking::where('user_id',auth()->id())
@@ -357,6 +391,18 @@ class VotingController extends Controller
             );
         }
 
+      
+        if (($step === 4 || $step === 5) && $booking && $booking->country) {
+            $country = Country::find($booking->country);
+            if ($country && $country->code) {
+                $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+                $timezone = $timezones[0] ?? 'UTC'; 
+                $dt = new \DateTime('now', new \DateTimeZone($timezone));
+                $gmtOffset = $dt->format('P'); 
+                $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
+            }
+        }
+
         $votingData = [];
         if ($step === 4) {
             $sessionVoting = session('voting.voting', []);
@@ -366,14 +412,6 @@ class VotingController extends Controller
             if (session()->has('booking_id')) {
                 $bookingId = session('booking_id');
             }
-            $country = Country::find( $booking->country);
-            
-            $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
-            $timezone = $timezones[0] ?? 'UTC'; 
-            $dt = new \DateTime('now', new \DateTimeZone($timezone));
-            $gmtOffset = $dt->format('P'); 
-
-            $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
 
             if ($bookingId) {
                 $dbVoting = VotingEvent::with('options')->where('booking_id' ,$bookingId)->first();
@@ -392,8 +430,8 @@ class VotingController extends Controller
                 $dbValues = [
                     'form_name' => $dbVoting->title,
                     'question' => $dbVoting->question,
-                    'start_at' => $dbVoting->start_at ? Carbon::parse($dbVoting->start_at)->format('Y-m-d\\TH:i') : '',
-                    'end_at'   => $dbVoting->end_at ? Carbon::parse($dbVoting->end_at)->format('Y-m-d\\TH:i') : '',
+                    'start_at' => $dbVoting->start_at ? Carbon::parse($dbVoting->start_at)->setTimezone($timezone)->format('Y-m-d\\TH:i') : '',
+                    'end_at'   => $dbVoting->end_at ? Carbon::parse($dbVoting->end_at)->setTimezone($timezone)->format('Y-m-d\\TH:i') : '',
                     'options'  => $dbVoting->options->pluck('option_text')->toArray(),
                 ];
             }
@@ -436,6 +474,7 @@ class VotingController extends Controller
             'votingData'     => $votingData,
             'votingEvent'    => $votingEvent,
             'localTime'     => $localTime,
+            'timezone'      => $timezone,
         ]);
     }
 
@@ -464,14 +503,15 @@ class VotingController extends Controller
             abort(404, 'Voting event not found or inactive');
         }
 
-        // Check if voting is still active (within start/end dates)
-        $now = Carbon::now();
+     
+        $timezone = $this->getVotingEventTimezone($votingEvent);
+        $now = Carbon::now($timezone);
         if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
-            return view('voting.public.not-started', compact('votingEvent'));
+            return view('voting.public.not-started', compact('votingEvent', 'timezone'));
         }
 
         if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
-            return view('voting.public.ended', compact('votingEvent'));
+            return view('voting.public.ended', compact('votingEvent', 'timezone'));
         }
 
         if (!Auth::check() || !Auth::user()->isVoter()) {
@@ -479,7 +519,10 @@ class VotingController extends Controller
             return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
         }
 
-        return view('voting.public.vote', compact('votingEvent'));
+    
+        $timezone = $this->getVotingEventTimezone($votingEvent);
+        
+        return view('voting.public.vote', compact('votingEvent', 'timezone'));
     }
 
     public function submitVote(Request $request, $token)
@@ -493,8 +536,8 @@ class VotingController extends Controller
             abort(404, 'Voting event not found or inactive');
         }
 
-        // Check if voting is still active
-        $now = Carbon::now();
+        $timezone = $this->getVotingEventTimezone($votingEvent);
+        $now = Carbon::now($timezone);
         if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
             return back()->with('error', 'Voting has not started yet.');
         }
@@ -509,7 +552,6 @@ class VotingController extends Controller
             return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
         }
 
-        // Validate the request
         $request->validate([
             'selected_option' => 'required|exists:voting_event_options,id',
         ]);
@@ -535,11 +577,9 @@ class VotingController extends Controller
 
         DB::beginTransaction();
         try {
-            // Increment the vote count for the selected option
+          
             $selectedOption = VotingEventOption::find($request->selected_option);
             $selectedOption->increment('votes_count');
-
-            // Decrease the remaining votes count and increase total votes cast on purchased tariff
             $purchasedTariff->decrement('remaining_votes');
             $purchasedTariff->increment('votes_count');
 
@@ -564,9 +604,47 @@ class VotingController extends Controller
         }
     }
 
-    /**
-     * PRG success page: show success after a vote without repeating the mutation on refresh
-     */
+    
+    public function checkVotingStatus($token)
+    {
+        $votingEvent = VotingEvent::where('token', $token)
+            ->where('status', 1)
+            ->first(['start_at', 'end_at', 'status', 'booking_id']);
+
+        if (!$votingEvent) {
+            return response()->json(['status' => 'not_found'], 404);
+        }
+
+      
+        $timezone = $this->getVotingEventTimezone($votingEvent);
+        $now = Carbon::now($timezone);
+        
+        if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
+            return response()->json([
+                'status' => 'not_started',
+                'start_time' => $votingEvent->start_at->toISOString(),
+                'current_time' => $now->toISOString(),
+                'timezone' => $timezone
+            ]);
+        }
+
+        if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
+            return response()->json([
+                'status' => 'ended',
+                'end_time' => $votingEvent->end_at->toISOString(),
+                'current_time' => $now->toISOString(),
+                'timezone' => $timezone
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'active',
+            'current_time' => $now->toISOString(),
+            'timezone' => $timezone
+        ]);
+    }
+
+  
     public function voteSuccess(Request $request, $token)
     {
         $votingEvent = VotingEvent::with('options')
@@ -586,7 +664,7 @@ class VotingController extends Controller
                 ->first();
         }
 
-        // Fallback for refresh: use query param if flash data is gone
+       
         if (! $selectedOption) {
             $qpId = $request->query('option');
             if ($qpId) {
@@ -596,7 +674,7 @@ class VotingController extends Controller
             }
         }
 
-    // If still missing, avoid null dereference by redirecting to event page
+
         if (! $selectedOption) {
             return redirect()->route('voting.public', ['token' => $token])
                 ->with('status', 'Thank you for voting.');
@@ -605,9 +683,7 @@ class VotingController extends Controller
         return view('voting.public.success', compact('votingEvent', 'selectedOption'));
     }
 
-    /**
-     * Mark current in-progress booking as completed and redirect to realized list.
-     */
+  
     public function complete(Request $request)
     {
         $request->validate([
@@ -618,26 +694,26 @@ class VotingController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        // Validate all steps are completed before allowing completion
+
         $errors = [];
 
-        // Step 1: Tariff selected
+
         if (empty($booking->tariff_id)) {
             $errors[] = 'Tariff is not selected.';
         }
 
-        // Step 2: Payment successful
+
         if (empty($booking->payment_status) || strtolower($booking->payment_status) !== 'succeeded') {
             $errors[] = 'Payment has not been completed.';
         }
 
-        // Step 3: Reward info exists
+
         $reward = $booking->reward;
         if (! $reward || empty(trim((string) $reward->name))) {
             $errors[] = 'Reward information is incomplete.';
         }
 
-        // Step 4: Voting event details with >= 2 options
+        
         $event = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
         if (! $event) {
             $errors[] = 'Voting event is not created.';
