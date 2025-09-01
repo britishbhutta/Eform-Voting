@@ -8,14 +8,14 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     public function redirect(){
-        $bookings = Booking::where('user_id', auth()->id())->get();
+        // $bookings = Booking::where('user_id', auth()->id())->get();
 
 
-        if (!empty($bookings)) {
-            return view('voting.realized', compact('bookings'));
-        }else{
-            return redirect()->route('voting.create');
-        }
+        // if (!empty($bookings)) {
+        //     return view('voting.realized', compact('bookings'));
+        // }else{
+        //     return redirect()->route('voting.create');
+        // }
         
     }
 }
