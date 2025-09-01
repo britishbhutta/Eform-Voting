@@ -153,14 +153,19 @@
                             </div>
 
                             <!-- Country -->
-                            <select name="country" id="country-select" class="form-control" required>
-                                <option value="">{{ $countries->isEmpty() ? 'No countries available' : 'Select Country' }}</option>
-                                @foreach($countries as $country)
-                                    <option value="{{ $country->id }} {{ $country->code }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
-                                        {{ $country->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                                <div class="row align-items-center mb-2">
+                                    <label class="col-sm-3 col-form-label">Country*</label>
+                                    <div class="col-sm-9">
+                                        <select name="country" id="country-select" class="form-control" required>
+                                            <option value="">{{ $countries->isEmpty() ? 'No countries available' : 'Select Country' }}</option>
+                                            @foreach($countries as $country)
+                                                <option value="{{ $country->id }} {{ $country->name }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                                                    {{ $country->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -172,11 +177,7 @@
                                 </div> -->
                                 <div class="container mt-4">
                                     
-                                    <!-- Name on Card -->
-                                    <div class="mb-3">
-                                    <label for="cardholder-name" class="form-label">Name on Card</label>
-                                    <input type="text" name="cardholder_name" id="cardholder-name" class="form-control" placeholder="Enter name on card" required>
-                                    </div>
+                                    
 
                                     <!-- Card Number -->
                                     <div class="mb-3">
@@ -197,6 +198,12 @@
                                         <div id="card-cvc-element" class="form-control" required></div>
                                         <div id="cardCvc-error" class="text-danger small mt-1"></div>
                                     </div>
+                                    </div>
+
+                                    <!-- Name on Card -->
+                                    <div class="mb-3">
+                                    <label for="cardholder-name" class="form-label">Name on Card</label>
+                                    <input type="text" name="cardholder_name" id="cardholder-name" class="form-control" placeholder="Enter name on card" required>
                                     </div>
                                     <!-- Region -->
                                     <div class="mb-3" id="region">
@@ -424,28 +431,37 @@
         if (!selectedCountry) {
             return; 
         }
-        
-        if (shippingAddressElement) {
-            shippingAddressElement.unmount();
-            shippingAddressElement = null;
-        }
-        elements = stripe.elements();
-        
-        shippingAddressElement = elements.create('address', {
-            mode: 'billing',
-            fields: {
-                country: 'always',   // show country
-                name: 'never',       // hide Full name
-                address: 'never',     // hide Address line 1 (and related fields)
-            },
-            defaultValues: {
-                address: {
-                    country: selectedCountryCode
-                }
-            }
-        });
 
-        shippingAddressElement.mount('#region');
+        // Create dropdown with only the selected country
+        let dropdownHtml = `
+            <label for="region-country" class="form-label">Country or Region</label>
+            <select id="region-country" name="country" class="form-select">
+                <option value="${selectedCountry}" selected>${selectedCountryCode}</option>
+            </select>
+        `;
+
+        // Inject into #region
+        $('#region').html(dropdownHtml);
+        
+        // if (shippingAddressElement) {
+        //     shippingAddressElement.unmount();
+        //     shippingAddressElement = null;
+        // }
+        // elements = stripe.elements();
+        
+        // shippingAddressElement = elements.create('address', {
+        //     mode: 'billing',
+        //     fields: {
+        //         country: 'always',   // show country
+        //     },
+        //     defaultValues: {
+        //         address: {
+        //             country: selectedCountryCode
+        //         }
+        //     }
+        // });
+
+        // shippingAddressElement.mount('#region');
     });
 
     var nextUrl = @json($nextUrl);

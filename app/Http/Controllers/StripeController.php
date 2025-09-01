@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Country;
 use App\Models\Tariff;
 use App\Models\PurchasedTariff;
 use Illuminate\Http\Request;
@@ -59,7 +60,9 @@ class StripeController extends Controller
                 'message' => 'CAPTCHA verification failed. Please try again.'
             ], 422);
         }
-
+        $validated = $validator->validated();
+        $country_id = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
+        $country = Country::find($country_id);
         $selectedTariff = Tariff::find($request->selectedTariffId);
 
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
@@ -67,6 +70,14 @@ class StripeController extends Controller
             'amount' => $selectedTariff->price_cents,
             'currency' => $selectedTariff->currency,
             'source' => $request->stripeToken,
+            // 'billing_details' => [
+            //     'name' => $request->cardholder_name,
+            //     'address' => [
+            //             'line1' => '',
+            //             'postal_code' => '',
+            //             'country' => $country->name, 
+            //         ],
+            //     ],
         ]);
 
         $validated = $validator->validated();
@@ -83,7 +94,7 @@ class StripeController extends Controller
         $booking->address          = $validated['address'];
         $booking->city             = $validated['city'];
         $booking->zip              = $validated['zip'];
-        $booking->country = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
+        $booking->country          = $country_id;
 
         $booking->booking_reference = strtoupper(uniqid('BOOK-'));
         $booking->price            = $selectedTariff->price_cents / 100;
