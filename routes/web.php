@@ -52,7 +52,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
 });
 Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
-// Middleware Role check. 2 = Creator, 1 = Voter
+// Middleware role:2 = Creator, role:1 = Voter
 Route::middleware(['auth', 'verified','role:2'])->group(function () {
     
     Route::match(['get', 'post'], '/voting/create/step/{step}', [VotingController::class, 'step'])
@@ -87,7 +87,7 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
         })->name('terms.show');
 });
 
-// Middleware Role check. 2 = Creator, 1 = Voter
+// Middleware role:2 = Creator, role:1 = Voter
 Route::middleware(['auth', 'verified','role:1'])->group(function () {
     Route::get('/voter', function(){
         return view('voting.voter.index');
