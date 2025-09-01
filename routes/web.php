@@ -40,6 +40,10 @@ Route::post('email/verify', [EmailVerificationController::class, 'verify'])
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])
     ->name('verification.resend');
 
+// Public API route to check voting status (for auto-refresh functionality)
+Route::get('/api/voting/{token}/status', [VotingController::class, 'checkVotingStatus'])
+    ->name('voting.status');
+
 
 
 // Authenticated user routes (dashboard, profile) protected by auth + verified
