@@ -43,19 +43,10 @@ class VotingController extends Controller
     }
     public function realized(Request $request)
     {
-        $previousUrl = url()->previous();
-        $bookings = Booking::where('user_id', auth()->id())->get();
-        if (str_contains($previousUrl, 'login')) {
-            if ($bookings->isEmpty()) {
-                return redirect()->route('voting.create.step', 1);
-            }else{
-                return view('voting.realized', compact('bookings'));
-            }
-        }else{
+        if(auth()->check()){
+            $bookings = Booking::where('user_id', auth()->id())->get();
             return view('voting.realized', compact('bookings'));
         }
-
-        
     }
 
     public function step($step, Request $request,)

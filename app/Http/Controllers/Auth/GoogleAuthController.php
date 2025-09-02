@@ -70,12 +70,7 @@ class GoogleAuthController extends Controller
 
             // Log user in
             Auth::login($user, true);
-            if ($user->role == '2') {
-                return redirect()->intended('/realized');
-            }
-            if ($user->role == '1') {
-                return redirect()->intended('/voter');
-            }
+            return redirect()->intended(route('dashboard'));
         } catch (\Throwable $e) {
             Log::error('Google login error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->route('login')
