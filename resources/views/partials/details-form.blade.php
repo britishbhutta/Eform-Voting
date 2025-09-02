@@ -29,7 +29,7 @@
     @endif
 
     <div class="mb-3">
-        <label for="form_name" class="form-label">Name of voting form</label>
+        <label for="form_name" class="form-label">Name of Voting Form*</label>
         <input type="text" class="form-control @error('form_name') is-invalid @enderror" id="form_name" name="form_name" placeholder="e.g. Best Player of the Match" required value="{{ old('form_name', $votingData['form_name'] ?? '') }}">
         @error('form_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
     </div>
@@ -37,7 +37,7 @@
     <div class="row g-3">
         <div class="col-md-6">
             <label for="start_at" class="form-label">
-                Voting Start (Date & Time) 
+                Voting Start (Date & Time)* 
                 @if($localTime)
                     <small class="text-muted"> {{ $localTime }}</small>
                 @endif
@@ -47,7 +47,7 @@
         </div>
         <div class="col-md-6">
             <label for="end_at" class="form-label">
-                Voting End (Date & Time)
+                Voting End (Date & Time)*
                 @if($localTime)
                     <small class="text-muted"> {{ $localTime }}</small>
                 @endif
@@ -58,13 +58,13 @@
     </div>
 
     <div class="mb-3 mt-2">
-        <label for="question" class="form-label">Voting question</label>
+        <label for="question" class="form-label">Voting Question*</label>
         <textarea class="form-control @error('question') is-invalid @enderror" id="question" name="question" rows="2" placeholder="Write the question participants will see" required>{{ old('question', $votingData['question'] ?? '') }}</textarea>
         @error('question') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Voting options</label>
+        <label class="form-label">Voting Options*</label>
         <div class="options-list" id="optionsList">
             @for($i = 0; $i < $initialCount; $i++)
                 @php $val = $initialOptions[$i] ?? ''; @endphp

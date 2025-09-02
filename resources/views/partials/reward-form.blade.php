@@ -35,7 +35,7 @@
     @endif
 
     <div class="mb-3">
-        <label for="reward_name" class="form-label">Name of reward</label>
+        <label for="reward_name" class="form-label">Name of Reward*</label>
         <input type="text"
                class="form-control @error('reward_name') is-invalid @enderror"
                id="reward_name"
@@ -49,7 +49,7 @@
 
 
     <div class="mb-3">
-        <label for="reward_description" class="form-label">Describe reward</label>
+        <label for="reward_description" class="form-label">Describe Reward</label>
         <textarea class="form-control @error('reward_description') is-invalid @enderror"
                   id="reward_description"
                   name="reward_description"

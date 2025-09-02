@@ -24,8 +24,8 @@
                                 <th>Vote Cast</th>
                                 <th>Results (%)</th>
                                 <th>File with email</th>
-                                <th>QR</th>
                                 <th>Tariff</th>
+                                <th>QR</th>
                                 <th>Status</th>
                                 </tr>
                             </thead>

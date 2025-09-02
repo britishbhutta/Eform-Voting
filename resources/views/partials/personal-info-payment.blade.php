@@ -181,7 +181,7 @@
 
                                     <!-- Card Number -->
                                     <div class="mb-3">
-                                    <label for="card-number-element" class="form-label">Card Number</label>
+                                    <label for="card-number-element" class="form-label">Card Number*</label>
                                     <div id="card-number-element" class="form-control" required></div>
                                     <div id="cardNumber-error" class="text-danger small mt-1"></div>
                                     </div>
@@ -189,12 +189,12 @@
                                     <!-- Expiry + CVC -->
                                     <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="card-expiry-element" class="form-label">Expiry Date</label>
+                                        <label for="card-expiry-element" class="form-label">Expiry Date*</label>
                                         <div id="card-expiry-element" class="form-control" required></div>
                                         <div id="cardExpiry-error" class="text-danger small mt-1"></div>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="card-cvc-element" class="form-label">CVC</label>
+                                        <label for="card-cvc-element" class="form-label">CVC*</label>
                                         <div id="card-cvc-element" class="form-control" required></div>
                                         <div id="cardCvc-error" class="text-danger small mt-1"></div>
                                     </div>
@@ -202,7 +202,7 @@
 
                                     <!-- Name on Card -->
                                     <div class="mb-3">
-                                    <label for="cardholder-name" class="form-label">Name on Card</label>
+                                    <label for="cardholder-name" class="form-label">Name on Card*</label>
                                     <input type="text" name="cardholder_name" id="cardholder-name" class="form-control" placeholder="Enter name on card" required>
                                     </div>
                                     <!-- Region -->
@@ -211,7 +211,7 @@
                                     </div>
                                     <!-- Postal Code (optional) -->
                                     <div class="mb-3">
-                                    <label for="card-postal-element" class="form-label">Postal Code</label>
+                                    <label for="card-postal-element" class="form-label">Postal Code*</label>
                                     <div id="card-postal-element" class="form-control" required></div>
                                     <div id="postalCode-error" class="text-danger small mt-1"></div>
                                     </div>
@@ -229,7 +229,7 @@
         </div>
 
         <!-- The Modal -->
-        <div class="modal" id="paymentConfirmationModal">
+        <div class="modal" id="paymentConfirmationModal" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <!-- Modal Header -->
@@ -258,7 +258,7 @@
                         <button type="submit" class="btn btn-primary">
                             Pay Now
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <button id="btnCancel" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                             Cancel
                         </button>
                     </div>
@@ -468,7 +468,7 @@
     
     $(document).on('submit', '#stripe-form', function(e) {
     e.preventDefault();
-
+     $("#btnCancel").prop("disabled", true);
     let form = $('#stripe-form');
     let submitBtn = form.find('button[type="submit"]');
 
@@ -496,6 +496,7 @@
                         .removeClass("d-none")
                         .addClass("d-block");
                      $("#rewardNextBtn").prop("disabled", false);
+                     
 
                 },
                 error: function (xhr) {

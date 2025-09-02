@@ -55,9 +55,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     
 });
-Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
+//Route::get('/dashboard',[DashboardController::class, 'redirect'])->name('dashboard');
 // Middleware role:2 = Creator, role:1 = Voter
 Route::middleware(['auth', 'verified','role:2'])->group(function () {
+
+    // Dashboard: canonical dashboard route (redirect to the wizard start)
+    Route::get('/dashboard', [DashboardController::class, 'redirect'])->name('dashboard');
+
+    // Canonical "create" entrypoint — redirects to step 1
+    Route::get('/voting/create', function () {
+        return redirect()->route('voting.create.step', ['step' => 1]);
+    })->name('voting.create');
     
     Route::match(['get', 'post'], '/voting/create/step/{step}', [VotingController::class, 'step'])
         ->whereNumber('step')

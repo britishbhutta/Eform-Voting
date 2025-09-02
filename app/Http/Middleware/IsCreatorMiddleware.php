@@ -15,14 +15,11 @@ class IsCreatorMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {   
-        
         $user = auth()->user();
-        
         if ($user && $user->role == $role) {
             
             return $next($request);
         }
-
-        abort(403, 'Unauthorized Access.');
+        return redirect()->back();
     }
 }
