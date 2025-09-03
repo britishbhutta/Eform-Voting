@@ -69,4 +69,9 @@ class User extends Authenticatable
     {
         return $this->isCreator() ? 'creator' : 'voter';
     }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return !is_null($this->email_verified_at);
+    }
 }
