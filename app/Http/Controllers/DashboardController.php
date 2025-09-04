@@ -8,11 +8,12 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     public function redirect(){
-        
-        if (Booking::where('user_id', auth()->id())->exists()) {
-            return redirect()->route('voting.realized');
-        } else {
-            return redirect()->route('voting.create.step', 1);
+        if (auth()->user()->role == 2) {
+            return Booking::where('user_id', auth()->id())->exists()
+                ? redirect()->route('voting.realized')
+                : redirect()->route('voting.create.step', 1);
         }
+
+        return redirect()->route('voter');
     }
 }

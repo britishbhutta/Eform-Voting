@@ -48,6 +48,7 @@ Route::get('/api/voting/{token}/status', [VotingController::class, 'checkVotingS
 
 // Authenticated user routes (dashboard, profile) protected by auth + verified
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'redirect'])->name('dashboard');
     // Dashboard: canonical dashboard route (redirect to the wizard start)
     // Route::get('/dashboard', function () {
     //     return redirect()->route('voting.create');
@@ -59,10 +60,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Middleware role:2 = Creator, role:1 = Voter
 Route::middleware(['auth', 'verified','role:2'])->group(function () {
 
-    // Dashboard: canonical dashboard route (redirect to the wizard start)
-    Route::get('/dashboard', [DashboardController::class, 'redirect'])->name('dashboard');
-
-    // Canonical "create" entrypoint — redirects to step 1
     Route::get('/voting/create', function () {
         return redirect()->route('voting.create.step', ['step' => 1]);
     })->name('voting.create');
@@ -103,7 +100,7 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
 Route::middleware(['auth', 'verified','role:1'])->group(function () {
     Route::get('/voter', function(){
         return view('voting.voter.index');
-    });
+    })->name('voter');
     // Public voting route for voters
     Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
         ->name('voting.public');

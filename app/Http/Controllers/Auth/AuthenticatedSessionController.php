@@ -45,6 +45,9 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
+
+        
+
         $user = $request->user();
         
         // Check if user's email is verified before allowing login
@@ -60,17 +63,7 @@ class AuthenticatedSessionController extends Controller
                 ->with('error', 'Please verify your email address before logging in. A verification code has been sent to your email.');
         }
         
-        // 🔑 Redirect by role
-        if ($user->role == '2') {
-            return redirect()->intended('/realized');
-        }
-
-        if ($user->role == '1') {
-            return redirect()->intended('/voter');
-        }
-
-        // fallback (e.g. admin or others)
-        return redirect()->intended('/dashboard');
+        return redirect()->intended(route('dashboard'));
     }
 
     /**
