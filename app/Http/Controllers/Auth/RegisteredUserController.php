@@ -109,7 +109,7 @@ class RegisteredUserController extends Controller
         $user->update([
             'email_verification_code'       => Hash::make($code),
             'email_verification_sent_at'    => now(),
-            'email_verification_expires_at' => now()->addMinutes(60),
+            'email_verification_expires_at' => now()->addMinutes(2),
         ]);
 
         // Send verification email

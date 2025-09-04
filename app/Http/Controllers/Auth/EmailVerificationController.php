@@ -17,6 +17,12 @@ class EmailVerificationController extends Controller
     public function show(Request $request): View
     {
         $email = session('email_for_verification') ?? $request->input('email', '');
+        
+        // If no email in session or request, try to get it from old input
+        if (!$email) {
+            $email = old('email', '');
+        }
+        
         return view('auth.verify-email', ['email' => $email]);
     }
 
@@ -55,36 +61,68 @@ class EmailVerificationController extends Controller
 
     public function resend(Request $request): RedirectResponse
     {
-        $request->validate(['email' => ['required', 'email']]);
+        // Get email from request or session
+        $email = $request->input('email') ?: session('email_for_verification');
+        
+        if (!$email) {
+            return back()
+                ->withErrors(['email' => 'Email address is required.'])
+                ->with('email_for_verification', '');
+        }
 
-        $user = User::where('email', $request->email)->first();
+        // Validate the email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return back()
+                ->withErrors(['email' => 'Please provide a valid email address.'])
+                ->with('email_for_verification', $email);
+        }
+
+        $user = User::where('email', $email)->first();
 
         if (! $user) {
-            return back()->withErrors(['email' => 'No account found for this email.']);
+            return back()
+                ->withErrors(['email' => 'No account found for this email.'])
+                ->withInput(['email' => $email])
+                ->with('email_for_verification', $email);
         }
 
-        if ($user->email_verification_sent_at && now()->diffInSeconds($user->email_verification_sent_at) < 60) {
-            return back()->withErrors(['email' => 'Please wait before requesting another code.']);
+        // Check if user is already verified
+        if ($user->email_verified_at) {
+            return back()
+                ->withErrors(['email' => 'This email is already verified.'])
+                ->withInput(['email' => $email])
+                ->with('email_for_verification', $email);
         }
 
+        // Rate limiting removed for better user experience
+        // Users can now resend codes immediately
+
+        // Generate new verification code
         try {
             $code = (string) random_int(100000, 999999);
         } catch (\Throwable $e) {
             $code = (string) rand(100000, 999999);
         }
 
+        // Immediately expire any existing code and set new one
         $user->email_verification_code = Hash::make($code);
         $user->email_verification_sent_at = now();
-        $user->email_verification_expires_at = now()->addMinutes(60);
+        $user->email_verification_expires_at = now()->addMinutes(2);
         $user->save();
 
+        // Send the new verification email
         try {
             Mail::to($user->email)->send(new WelcomeMail($code, $user->first_name));
         } catch (\Throwable $e) {
             Log::error('Failed resending verification code for user id ' . $user->id . ': ' . $e->getMessage());
-            return back()->withErrors(['email' => 'Failed to send verification email. Please try again later.']);
+            return back()
+                ->withErrors(['email' => 'Failed to send verification email. Please try again later.'])
+                ->withInput(['email' => $email])
+                ->with('email_for_verification', $email);
         }
 
-        return back()->with('status', 'A new verification code was sent to your email.');
+        return back()
+            ->with('status', 'A new verification code was sent to your email.')
+            ->with('email_for_verification', $user->email);
     }
 }
