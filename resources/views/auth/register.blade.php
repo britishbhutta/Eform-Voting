@@ -15,7 +15,7 @@
             $selectedRole = ((int)$selectedRole === \App\Models\User::ROLE_CREATOR) ? 'creator' : 'voter';
         }
     @endphp
-
+        
     <div class="container form-card form-compact">
         <div class="text-center mb-3">
             <h1 class="fw-bold">Sign up</h1>

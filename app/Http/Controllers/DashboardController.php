@@ -13,7 +13,13 @@ class DashboardController extends Controller
                 ? redirect()->route('voting.realized')
                 : redirect()->route('voting.create.step', 1);
         }
-
-        return redirect()->route('voter');
+        $token = session('eventToken');
+        if ($token) {
+            session()->forget('eventToken');
+            return redirect()->route('voting.public',[$token]);
+        }else{
+            return redirect()->route('voter');
+        }
+        
     }
 }

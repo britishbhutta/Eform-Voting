@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InvoiceIssueMail;
 use App\Models\Booking;
 use App\Models\Country;
 use App\Models\Tariff;
 use App\Models\PurchasedTariff;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
@@ -17,16 +20,12 @@ class StripeController extends Controller
 {
     public function store(Request $request)
     {
-
         $rules = [
             'stripeToken'   => 'required|string',
             'selectedTariffId' => 'required|exists:tariffs,id',
-
-
             // Billing info
             'email'         => 'required|email',
             'phone_number'  => 'nullable|string|max:20',
-            'invoice_issued' => 'nullable|boolean',
             'company_name'  => 'required_if:invoice_issued,1|string|max:255',
             'company_id'    => 'required_if:invoice_issued,1|string|max:255',
             'tax_vat'       => 'nullable|string|max:50',
@@ -131,6 +130,11 @@ class StripeController extends Controller
             'voting.selected_tariff' => $selectedTariff->id,
         ]);
 
+        $invoiceIssued = $request->boolean('invoice_issued');
+        if($invoiceIssued == '1'){
+            $user = Auth::user();
+            Mail::to($booking->email)->send(new InvoiceIssueMail($user, $booking, $selectedTariff));
+        }
 
         return response()->json([
             'status' => 'success',

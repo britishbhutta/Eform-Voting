@@ -49,10 +49,11 @@
 
 
     <div class="mb-3">
-        <label for="reward_description" class="form-label">Describe Reward</label>
+        <label for="reward_description" class="form-label">Describe Reward *</label>
         <textarea class="form-control @error('reward_description') is-invalid @enderror"
                   id="reward_description"
                   name="reward_description"
+                  required
                   rows="4">{{ old('reward_description', $rewardData['reward_description'] ?? '') }}</textarea>
         @error('reward_description')
             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -60,7 +61,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="reward_image" class="form-label">Upload reward (image)</label>
+        <label for="reward_image" class="form-label">Upload reward (image) *</label>
         <input type="file"
                class="form-control @error('reward_image') is-invalid @enderror"
                id="reward_image"
@@ -114,3 +115,77 @@
         <button type="submit" class="btn btn-success">Next</button>
     </div>
 </form>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector(".reward-form");
+    const rewardName = document.getElementById("reward_name");
+    const rewardDescription = document.getElementById("reward_description");
+    const rewardImage = document.getElementById("reward_image");
+
+    function showError(input, message) {
+        input.classList.add("is-invalid");
+
+        // if no error div exists, create one
+        let errorDiv = input.parentNode.querySelector(".client-error");
+        if (!errorDiv) {
+            errorDiv = document.createElement("div");
+            errorDiv.className = "invalid-feedback d-block client-error";
+            input.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+
+    function clearError(input) {
+        input.classList.remove("is-invalid");
+        let errorDiv = input.parentNode.querySelector(".client-error");
+        if (errorDiv) errorDiv.remove();
+    }
+
+    form.addEventListener("submit", function (e) {
+        let hasError = false;
+
+        // validate reward name
+        if (rewardName.value.trim() === "") {
+            showError(rewardName, "Reward name is required.");
+            hasError = true;
+        } else {
+            clearError(rewardName);
+        }
+
+        // validate description (min 10 chars as an example)
+        if (rewardDescription.value.trim().length < 10) {
+            showError(rewardDescription, "Reward description must be at least 10 characters.");
+            hasError = true;
+        } else {
+            clearError(rewardDescription);
+        }
+
+        // validate image (only if no existing one)
+        if (!rewardImage.value && !document.querySelector("[name='existing_reward_image']")) {
+            showError(rewardImage, "Please upload an image of the reward.");
+            hasError = true;
+        } else {
+            clearError(rewardImage);
+        }
+
+        if (hasError) {
+            e.preventDefault();
+        }
+    });
+
+    // live validation for text inputs
+    [rewardName, rewardDescription].forEach(input => {
+        input.addEventListener("input", () => {
+            if (input.value.trim() !== "") clearError(input);
+        });
+    });
+
+    // live validation for file input
+    rewardImage.addEventListener("change", () => {
+        if (rewardImage.files.length > 0) {
+            clearError(rewardImage);
+        }
+    });
+});
+
+</script>

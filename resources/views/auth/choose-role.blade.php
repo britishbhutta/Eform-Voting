@@ -6,6 +6,12 @@
     @endpush
 
     @php
+        if (session()->has('eventToken')) {
+            session()->forget('eventToken');
+        }
+        if (session()->has('votingEvent')) {
+            session()->forget('votingEvent');
+        }
         // role names used by your app: 'voter' and 'creator'
         $firstRole = 'voter';
         $secondRole = 'creator';

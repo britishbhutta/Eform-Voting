@@ -102,8 +102,7 @@ Route::middleware(['auth', 'verified','role:1'])->group(function () {
         return view('voting.voter.index');
     })->name('voter');
     // Public voting route for voters
-    Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
-        ->name('voting.public');
+    
 
     Route::post('/voting/{token}/submit', [VotingController::class, 'submitVote'])
         ->name('voting.submit');
@@ -112,3 +111,6 @@ Route::middleware(['auth', 'verified','role:1'])->group(function () {
     Route::get('/voting/{token}/success', [VotingController::class, 'voteSuccess'])
         ->name('voting.success');
 });
+Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
+        ->name('voting.public');
+//Route::get('/votingSignIn/{token}', [VotingController::class, 'votingSignIn'])->name('votingSignIn');

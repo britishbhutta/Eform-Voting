@@ -493,8 +493,9 @@ class VotingController extends Controller
         if (!$votingEvent) {
             abort(404, 'Voting event not found or inactive');
         }
-
-     
+        session(['eventToken' => $token]);
+        session(['votingEvent' => $votingEvent->title]);
+        
         $timezone = $this->getVotingEventTimezone($votingEvent);
         $now = Carbon::now($timezone);
         if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
@@ -504,11 +505,11 @@ class VotingController extends Controller
         if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
             return view('voting.public.ended', compact('votingEvent', 'timezone'));
         }
-
-        if (!Auth::check() || !Auth::user()->isVoter()) {
-            session(['url.intended' => route('voting.public', ['token' => $token])]);
-            return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
-        }
+        
+        // if (!Auth::check() || !Auth::user()->isVoter()) {
+        //     session(['url.intended' => route('voting.public', ['token' => $token])]);
+        //     return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
+        // }
 
     
         $timezone = $this->getVotingEventTimezone($votingEvent);
@@ -737,4 +738,37 @@ class VotingController extends Controller
 
         return redirect()->route('voting.realized')->with('status', 'Voting form marked as completed.');
     }
+
+    // public function votingSignIn($token){
+    //     $votingEvent = VotingEvent::with('options')
+    //         ->where('token', $token)
+    //         ->where('status', 1)
+    //         ->first();
+
+    //     if (!$votingEvent) {
+    //         abort(404, 'Voting event not found or inactive');
+    //     }
+
+    //     $timezone = $this->getVotingEventTimezone($votingEvent);
+    //     $now = Carbon::now($timezone);
+    //     if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
+    //         return view('voting.public.not-started', compact('votingEvent', 'timezone'));
+    //     }
+
+    //     if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
+    //         return view('voting.public.ended', compact('votingEvent', 'timezone'));
+    //     }
+
+    //     if (!Auth::check() || !Auth::user()->isVoter()) {
+    //         session(['url.intended' => route('voting.public', ['token' => $token])]);
+    //         return redirect()->route('login')->with('error', 'Please login as a voter to participate.');
+    //     }
+
+    
+    //     $timezone = $this->getVotingEventTimezone($votingEvent);
+        
+    //     return view('voting.public.vote', compact('votingEvent', 'timezone'));
+    //     //return view('voting.voter.votingSignIn');
+    // }
+
 }

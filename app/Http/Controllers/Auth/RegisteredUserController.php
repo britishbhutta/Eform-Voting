@@ -121,10 +121,19 @@ class RegisteredUserController extends Controller
             $warning = 'Verification email could not be sent right now. You can request a code on the verification page.';
         }
 
+        if(session()->has('eventToken')){
+            $token = session('eventToken');
+        }else{
+            $token = null;
+        }
+
         // Ensure user is not logged in until they verify
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        if($token){
+            session(['eventToken' => $token]);
+        }
 
         // Redirect to verification page with helpful flashes
         $redirect = redirect()->route('verification.notice')
