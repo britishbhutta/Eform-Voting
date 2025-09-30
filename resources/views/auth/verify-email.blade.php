@@ -3,7 +3,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
     @endpush
-
+            
     <div class="container form-card">
         <div class="card shadow-sm">
             <div class="card-body">

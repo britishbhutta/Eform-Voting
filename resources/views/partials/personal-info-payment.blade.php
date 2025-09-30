@@ -12,7 +12,7 @@
             display: none !important;
         }
 </style>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
 @endpush
 
  @if($selectedTariff)
@@ -69,10 +69,9 @@
                             <div class="row align-items-center mb-2">
                                 <label class="col-sm-3 col-form-label">Phone Number</label>
                                 <div class="col-sm-9">
-                                    <div class="input-group">
-                                        <span class="input-group-text">+1</span>
-                                        <input type="tel" name="phone_number" class="form-control" placeholder="Enter phone number">
-                                    </div>
+                                    <input type="tel" id="phone" placeholder="" id="telephone" name="phone_number" class="form-control" inputmode="numeric" maxlength="15"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                        placeholder="Phone" style="width: 400px;">
                                 </div>
                             </div>
 
@@ -312,7 +311,21 @@
 
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+
+
 <script type="text/javascript">
+
+    const input = document.querySelector("#phone");
+    const iti = window.intlTelInput(input, {
+        initialCountry: "auto",
+        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/utils.js" // ensure utils are loaded
+    });
+    fetch("https://ipapi.co/country/")
+    .then(res => res.text())
+    .then(countryCode => {
+        iti.setCountry(countryCode.toLowerCase());
+    })
 
     var stripe = Stripe('{{ env("STRIPE_KEY") }}');
     var elements = stripe.elements();
@@ -469,6 +482,16 @@
     $(document).on('submit', '#stripe-form', function(e) {
     e.preventDefault();
      $("#btnCancel").prop("disabled", true);
+
+    let rawNumber   = input.value; 
+    if (rawNumber.startsWith("0")) {
+        rawNumber = rawNumber.substring(1);
+        } 
+    let countryCode = iti.getSelectedCountryData().dialCode;
+    console.log(rawNumber, countryCode);
+    $('#phone').val(countryCode + rawNumber);
+
+
     let form = $('#stripe-form');
     let submitBtn = form.find('button[type="submit"]');
 

@@ -163,8 +163,8 @@
                             <div><strong>Question:</strong> {{ $overviewEvent?->question ?? '-' }}</div>
 
 
-                            <div><strong>Start:</strong> {{ $overviewEvent?->start_at ? \Carbon\Carbon::parse($overviewEvent->start_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') : '-' }}</div>
-                            <div><strong>End:</strong> {{ $overviewEvent?->end_at ? \Carbon\Carbon::parse($overviewEvent->end_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') : '-' }}</div>
+                            <div><strong>Start:</strong> {{ $overviewEvent?->start_at ? \Carbon\Carbon::parse($overviewEvent->start_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') : '-' }} {{ $localTime }}</div>
+                            <div><strong>End:</strong> {{ $overviewEvent?->end_at ? \Carbon\Carbon::parse($overviewEvent->end_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') : '-' }} {{ $localTime }}</div>
 
                             <div><strong>Options:</strong>
                                 @if($overviewEvent && $overviewEvent->options->isNotEmpty())
