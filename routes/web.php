@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\VotingController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,15 +95,18 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
         Route::get('/terms', function () {
             return view('term-condition.terms-for-tariff-selection'); // resources/views/terms.blade.php
         })->name('terms.show');
+    // CSV File For Voter Email
+    Route::get('/export-voting-event-emails/{id}', [VotingController::class, 'exportVotingEventEmails'])->name('voting.event.emails');
+    
 });
 
 // Middleware role:2 = Creator, role:1 = Voter
 Route::middleware(['auth', 'verified','role:1'])->group(function () {
-    Route::get('/voter', function(){
-        return view('voting.voter.index');
-    })->name('voter');
+    // Route::get('/voter', function(){
+    //     return view('voting.voter.index');
+    // })->name('voter');
     // Public voting route for voters
-    
+    Route::get('voter.history',[DashboardController::class, 'voterHistory'])->name('voterHistory');
 
     Route::post('/voting/{token}/submit', [VotingController::class, 'submitVote'])
         ->name('voting.submit');
@@ -111,6 +115,16 @@ Route::middleware(['auth', 'verified','role:1'])->group(function () {
     Route::get('/voting/{token}/success', [VotingController::class, 'voteSuccess'])
         ->name('voting.success');
 });
+
 Route::get('/voting/{token}', [VotingController::class, 'publicVoting'])
         ->name('voting.public');
 //Route::get('/votingSignIn/{token}', [VotingController::class, 'votingSignIn'])->name('votingSignIn');
+Route::get('/storage-link', function () {
+    try {
+        Artisan::call('storage:link');
+        return 'Storage link created successfully!';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+ 

@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vote Submitted - {{ $votingEvent->title }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .voting-card { max-width: 600px; margin: 2rem auto; }
-        .voting-header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
-        .success-icon { font-size: 4rem; color: #28a745; }
-    </style>
-</head>
-<body>
+<x-app-layout>  
+    @push('styles')
+        <style>
+            body { background-color: #f8f9fa; }
+            .voting-card { max-width: 600px; margin: 2rem auto; }
+            .voting-header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+            .success-icon { font-size: 4rem; color: #28a745; }
+        </style>
+    @endpush
+
     <div class="container">
         <div class="voting-card">
             <div class="card voting-header">
@@ -39,5 +34,4 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+</x-app-layout> 

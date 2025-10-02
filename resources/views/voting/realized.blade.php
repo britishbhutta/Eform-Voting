@@ -3,10 +3,25 @@
     @push('styles')
         <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     @endpush
+    @if(session('error'))
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Toastify({
+                    text: "{{ session('error') }}",
+                    duration: 3000, // 5 seconds
+                    gravity: "top", // `top` or `bottom`
+                    position: "right", // `left`, `center` or `right`
+                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)", // red/orange for error
+                    stopOnFocus: true, // pause on hover
+                    close: true
+                }).showToast();
+            });
+        </script>
+    @endif
+
 
     <div class="container py-4">
         @include('partials.voting-tabs')
-
         <div class="card">
             <div class="card-body text-center">
                 @if($bookings->isEmpty())
@@ -64,7 +79,9 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td>-</td>
+                                        <td>
+                                            <a href="{{ route('voting.event.emails',[$votingEvent->id]) }}">Emails.CSV</a>
+                                        </td>
                                         <td>{{ $booking->tariff->title }}</td>
                                         <td>
                                             @if($votingEvent)

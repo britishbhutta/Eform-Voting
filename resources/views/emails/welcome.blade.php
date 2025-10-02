@@ -7,7 +7,7 @@ Thanks for signing up — please use the verification code below to activate you
 **{{ $code }}**
 @endcomponent
 
-This code will expire in 2 minutes.
+This code will expire in 5 minutes.
 
 If you did not register on our site, just ignore this email.
 

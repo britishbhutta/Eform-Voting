@@ -21,6 +21,37 @@ use App\Models\PurchasedTariff;
 
 class VotingController extends Controller
 {
+
+    public function exportVotingEventEmails($eventId)
+    {
+        $votingEvent = VotingEvent::find($eventId);
+        $fileName = "Voting_Event_$votingEvent->title _emails.csv";
+
+        // Load votes with users
+        $votes = VotingEventVote::where('voting_event_id', $eventId)->get();
+        if($votes->isNotEmpty()){
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($votes) {
+                $file = fopen('php://output', 'w');
+
+                foreach ($votes as $vote) {
+                    fputcsv($file, [$vote->email]);
+                }
+
+                fclose($file);
+            };
+            return response()->stream($callback, 200, $headers);
+        }else{
+            return redirect()->back()->with('error', 'No Emails to download for this Voting Event.');
+        }   
+    }
    
     private function getVotingEventTimezone($votingEvent)
     {
@@ -489,6 +520,7 @@ class VotingController extends Controller
             ->where('token', $token)
             ->where('status', 1)
             ->first();
+        $reward = Reward::where('booking_id',$votingEvent->booking_id)->first();    
 
         if (!$votingEvent) {
             abort(404, 'Voting event not found or inactive');
@@ -499,11 +531,11 @@ class VotingController extends Controller
         $timezone = $this->getVotingEventTimezone($votingEvent);
         $now = Carbon::now($timezone);
         if ($votingEvent->start_at && $now->lt($votingEvent->start_at)) {
-            return view('voting.public.not-started', compact('votingEvent', 'timezone'));
+            return view('voting.public.not-started', compact('votingEvent', 'timezone','reward'));
         }
 
         if ($votingEvent->end_at && $now->gt($votingEvent->end_at)) {
-            return view('voting.public.ended', compact('votingEvent', 'timezone'));
+            return view('voting.public.ended', compact('votingEvent', 'timezone','reward'));
         }
         
         // if (!Auth::check() || !Auth::user()->isVoter()) {
@@ -514,7 +546,7 @@ class VotingController extends Controller
     
         $timezone = $this->getVotingEventTimezone($votingEvent);
         
-        return view('voting.public.vote', compact('votingEvent', 'timezone'));
+        return view('voting.public.vote', compact('votingEvent', 'timezone','reward'));
     }
 
     public function submitVote(Request $request, $token)
