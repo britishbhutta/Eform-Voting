@@ -3,6 +3,11 @@
     @push('styles')
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
+        <!-- <style>
+            body { background-color: #f8f9fa; }
+            .voting-card { max-width: 600px; margin: 2rem auto; }
+            .voting-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        </style> -->
     @endpush
 
     @php
@@ -15,13 +20,24 @@
             $selectedRole = ((int)$selectedRole === \App\Models\User::ROLE_CREATOR) ? 'creator' : 'voter';
         }
     @endphp
-        
+    
+    
     <div class="container form-card form-compact">
         <div class="text-center mb-3">
             <h1 class="fw-bold">Sign up</h1>
             <div class="small text-muted">Signing up as <strong>{{ ucfirst($selectedRole) }}</strong></div>
         </div>
-
+        <!-- @if(session()->has('votingEvent'))
+            <div class="container">
+                <div class="voting-card">
+                    <div class="card voting-header mb-3">
+                        <div class="card-body text-center">
+                            <h2 class="card-title mb-2">{{ session('votingEvent') }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif -->
         <div class="card shadow-sm border-0">
             <div class="card-body">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-3">

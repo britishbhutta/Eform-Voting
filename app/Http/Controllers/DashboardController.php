@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\VotingEventVote;
 use Illuminate\Http\Request;
+use Auth;
 
 class DashboardController extends Controller
 {
@@ -18,8 +20,13 @@ class DashboardController extends Controller
             session()->forget('eventToken');
             return redirect()->route('voting.public',[$token]);
         }else{
-            return redirect()->route('voter');
+            return redirect()->route('voterHistory');
         }
         
+    }
+
+    public function voterHistory(){
+        $votingEventVotes = VotingEventVote::where('email', Auth::user()->email)->get();
+        return view('voting.voter.index', compact('votingEventVotes'));
     }
 }

@@ -1,6 +1,10 @@
 <nav class="bg-white border-bottom">
     <div class="container d-flex justify-content-between align-items-center py-2">
-        <a href="{{ route('dashboard') }}" class="h5 mb-0 text-decoration-none">{{ config('app.name', 'eform') }}</a>
+        @if(Auth::check() && Auth::user()->role == '2')
+            <a href="{{ route('dashboard') }}" class="h5 mb-0 text-decoration-none">{{ config('app.name', 'eform') }}</a>
+        @else
+            <a href="{{ route('voterHistory') }}" class="h5 mb-0 text-decoration-none">{{ config('app.name', 'eform') }}</a>
+        @endif
 
         <!-- <div class="d-none d-sm-flex align-items-center gap-3">
             <a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a>

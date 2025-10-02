@@ -9,6 +9,10 @@
         </style>
     @endpush
         <div class="container">
+            <div class="text-center">
+                <span class="fw-bold fs-5">Voting Form - Reward</span>
+                <span class="fw-bold fs-5">" {{ $reward->name }} "</span>
+            </div>
             <div class="voting-card">
                 <div class="card voting-header">
                     <div class="card-body text-center">
@@ -41,10 +45,10 @@
                             @endif
                         </div>
                         @if(!Auth::check())
-                            <div class="mt-4 text-center">
-                                <span class="fw-bold fs-5">Join The Voting</span>
-                                &nbsp; | &nbsp;
+                            <div class="mt-4 text-center mb-4">
                                 <a href="{{ route('login') }}" class="fw-bold text-decoration-none text-primary">
+                                    Join The Voting
+                                    &nbsp; | &nbsp;
                                     Log In or Register
                                 </a>
                             </div>

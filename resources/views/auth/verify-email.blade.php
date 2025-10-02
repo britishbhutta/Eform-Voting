@@ -27,7 +27,7 @@
 
                 <p class="small text-muted">
                     We sent a 6-digit verification code to your email. Enter it here to activate your account.
-                    <br><strong>The code will expire in 2 minutes.</strong>
+                    <br><strong>The code will expire in 5 minutes.</strong>
                 </p>
 
                 <form method="POST" action="{{ route('verification.verify') }}">

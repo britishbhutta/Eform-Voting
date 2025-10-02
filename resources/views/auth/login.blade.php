@@ -166,8 +166,8 @@
                         </div>
                     </div>
         @if(session()->has('votingEvent'))
-            </div>
                 </div>
+            </div>
         @endif
     </div>
 
