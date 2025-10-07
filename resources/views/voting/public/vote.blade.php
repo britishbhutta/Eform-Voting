@@ -40,8 +40,10 @@
                                         <div class="card option-card h-100" data-option-id="{{ $option->id }}">
                                             <div class="card-body text-center">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="selected_option" 
+                                                    @if(Auth::check())
+                                                        <input class="form-check-input" type="radio" name="selected_option" 
                                                         id="option_{{ $option->id }}" value="{{ $option->id }}" required>
+                                                    @endif
                                                     <label class="form-check-label" for="option_{{ $option->id }}">
                                                         {{ $option->option_text }}
                                                     </label>

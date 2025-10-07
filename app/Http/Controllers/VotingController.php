@@ -22,6 +22,13 @@ use App\Models\PurchasedTariff;
 class VotingController extends Controller
 {
 
+    public function createNewVotingForm(){
+        session()->forget('booking_id');
+        session()->forget('issued_invoice');
+        session()->forget('voting.voting_event_id');
+        session()->forget('voting.selected_tariff');
+        return redirect()->route('voting.create.step', ['step' => 1]);
+    }
     public function exportVotingEventEmails($eventId)
     {
         $votingEvent = VotingEvent::find($eventId);
@@ -79,78 +86,162 @@ class VotingController extends Controller
             return view('voting.realized', compact('bookings'));
         }
     }
+    public function incompleteVotingForm($id){
+        $booking = Booking::find($id);
+        session(['booking_id' => $booking->id]);
+        return redirect()->route('voting.create.step', ['step' => 1]);
+    }
 
     public function step($step, Request $request,)
     {
+        
+        $booking = null;
         $step = (int) $step;
 
         $stepNames = [
-            1 => 'Choose Tariff',
-            2 => 'Personal Info & Payments',
+            1 => 'Personal Info',
+            2 => 'Choose Tariff',
             3 => 'Insert Reward',
             4 => 'Detail Of Event',
-            5 => 'Creation Of Form',
+            5 => 'Payment',
+            6 => 'Creation Of Form',
         ];
 
         if ($step < 1 || $step > count($stepNames)) {
             abort(404);
         }
-
-        if($step === 3){
-            if(isset($_GET['booking_id'])){
-                $bookingId = $_GET['booking_id'];
-                session(['booking_id' => $_GET['booking_id']]);
-           }
-        }
- 
-       
-        $selectedId = session('voting.selected_tariff', null);
-        if (session()->has('booking_id')) { 
-            $bookingId = session('booking_id');
-            $selectedId = Booking::where('id', $bookingId)->value('tariff_id');
-          
-        }
-  
-            // get booking id
-        $bookingId = Booking::where('user_id', auth()->id())
-            ->where('tariff_id', $selectedId)
-            ->where('is_completed', '0')->value('id');
         
-        $selectedTariff = $selectedId ? Tariff::find($selectedId) : null;
-       
+        $selectedTariff = null;
+        // if($step != 1){
+            $selectedId = session('voting.selected_tariff', null);
+            if (session()->has('booking_id')) { 
+                $bookingId = session('booking_id');
+                $selectedId = Booking::where('id', $bookingId)->value('tariff_id');
+            }
+            $bookingId = Booking::where('user_id', auth()->id())
+                ->where('tariff_id', $selectedId)
+                ->where('is_completed', '0')->value('id');
+            $selectedTariff = $selectedId ? Tariff::find($selectedId) : null;
+            if ($selectedId && ! $selectedTariff) {
+                session()->forget('voting.selected_tariff');
+                $selectedId = null;
+                $selectedTariff = null;
+            }  
+        // }
         
-       
-        if ($selectedId && ! $selectedTariff) {
-            session()->forget('voting.selected_tariff');
-            $selectedId = null;
-            $selectedTariff = null;
-        }
-        
-        
+        if(session()->has('booking_id')){
+            $booking = Booking::find(session('booking_id'));
+            }
         $tariffs = null;
-        if ($step === 1) {
+        if ($step === 2 || $step === 1 ) {
             $tariffs = Tariff::orderBy('price_cents', 'asc')->get();
-            session()->forget('booking_id');
+            //session()->forget('booking_id');
             session()->forget('voting.voting_event_id');
-
         } else {
-            if (! $selectedTariff) {
-                return redirect()->route('voting.create.step', ['step' => 1])
+            if (! $selectedTariff && $step === 2) {
+                return redirect()->route('voting.create.step', ['step' => 2])
                     ->with('error', 'Tariff not exist in database.');
             }
         }
 
         if ($request->isMethod('post')) {
+           // echo $request['phone'];die;
+            if($step === 1){
+                $rules = [
+                    'email'         => 'required|email',
+                    'phone'         => 'nullable|string|max:20',
+                    'company'       => 'required_if:invoice_issued,1|string|max:255',
+                    'company_id'    => 'required_if:invoice_issued,1|string|max:255',
+                    'tax_vat_no'    => 'nullable|string|max:50',
+                    'fname'         => 'required|string|max:100',
+                    'lname'         => 'required|string|max:100',
+                    'address'       => 'required|string|max:255',
+                    'city'          => 'required|string|max:100',
+                    'zip'           => 'required|string|max:20',
+                    'country'       => 'required',
+                ];
 
-            if ($step === 1 && $request->filled('tariff')) {
+                $validator = Validator::make($request->all(), $rules);
+                if ($validator->fails()) {
+                    return redirect()->back()
+                        ->withErrors($validator)
+                        ->withInput();
+                }
+                
+                if($request['invoice_issued'] == true)
+                {   
+                    session(['issued_invoice' => 'true']);
+                }else
+                {
+                    if(session('issued_invoice')){
+                        session()->forget('issued_invoice');
+                    }
+                }
+                $validated = $validator->validated();
+                $country_id = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
+                $fullName = $validated['fname'] . ' ' . $validated['lname'];
+                $bookingDraft = [
+                    'email'         => $validated['email'],
+                    'phone'         => $request['phone'],
+                    'company'       => $validated['company'],
+                    'company_id'    => $validated['company_id'],
+                    'tax_vat_no'    => $validated['tax_vat_no'],
+                    'name'          => $fullName,
+                    'address'       => $validated['address'],
+                    'city'          => $validated['city'],
+                    'zip'           => $validated['zip'],
+                    'country'       => $country_id,
+                ];
+
+                $payload = [
+                    'email'         => $bookingDraft['email'],
+                    'phone'         => $bookingDraft['phone'],
+                    'company'       => $bookingDraft['company'],
+                    'company_id'    => $bookingDraft['company_id'],
+                    'tax_vat_no'    => $bookingDraft['tax_vat_no'],
+                    'name'          => $fullName,
+                    'address'       => $bookingDraft['address'],
+                    'city'          => $bookingDraft['city'],
+                    'zip'           => $bookingDraft['zip'],
+                    'country'       => $bookingDraft['country'],
+                    'booking_reference' => strtoupper(uniqid('BOOK-')),
+                    'user_id'           => auth()->id(),   
+                ];
+                if (session()->has('booking_id')) {
+                    $bookingId = session('booking_id');
+                }else{
+                    $bookingId = null;
+                }
+                try {
+                    $booking = Booking::updateOrCreate(
+                        ['id' => $bookingId],
+                        $payload
+                    );
+                } catch (\Throwable $e) {
+                    Log::error('Failed to create/update Booking', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'payload' => $payload,
+                        'booking_id' => $bookingId ?? null,
+                    ]);
+
+                    return back()->with('error', 'Unable to save Booking. Please try again.')->withInput();
+                }
+                session(['booking_id' => $booking->id]);
+                //echo session('booking_id');die;
+                return redirect()->route('voting.create.step', ['step' => 2]);
+            }
+            
+            if ($step === 2 && $request->filled('tariff')) {
+                
                 $validated = $request->validate([
                     'tariff' => 'required|exists:tariffs,id',
                 ]);
 
-                session(['voting.selected_tariff' => (int) $validated['tariff']]);
-           
+            session(['voting.selected_tariff' => (int) $validated['tariff']]);
+    
 
-                return redirect()->route('voting.create.step', ['step' => 2]);
+            return redirect()->route('voting.create.step', ['step' => 5]);
             }
 
             if ($step === 3) {
@@ -233,7 +324,7 @@ class VotingController extends Controller
                     'end_at'     => ['required', 'date', 'after:start_at'],
                     'options'    => ['required', 'array', 'min:2'],
                     'options.*'  => ['nullable', 'string', 'max:500'],
-                    'booking_id' => ['nullable', 'integer', 'exists:bookings,id'],
+                    // 'booking_id' => ['nullable', 'integer', 'exists:bookings,id'],
                 ]);
 
                 if ($validator->fails()) {
@@ -250,14 +341,14 @@ class VotingController extends Controller
                     return back()->withErrors(['options' => 'Please provide at least two voting options.'])->withInput();
                 }
 
-                if (! $bookingId && Auth::check()) {
-                    $latestBooking = Booking::where('user_id', Auth::id())
-                        ->orderByDesc('created_at')
-                        ->first();
-                    if ($latestBooking) {
-                        $bookingId = $latestBooking->id;
-                    }
-                }
+                // if (! $bookingId && Auth::check()) {
+                //     $latestBooking = Booking::where('user_id', Auth::id())
+                //         ->orderByDesc('created_at')
+                //         ->first();
+                //     if ($latestBooking) {
+                //         $bookingId = $latestBooking->id;
+                //     }
+                // }
                 if (session()->has('booking_id')) {
                     $bookingId = session('booking_id');
                 }
@@ -372,35 +463,88 @@ class VotingController extends Controller
             //
             return redirect()->route('voting.create.step', ['step' => $step]);
         }
-
-        $countries = ($step === 2) ? Country::active()->orderBy('name')->get() : null;
+        
+        $countries = ($step === 1) ? Country::active()->orderBy('name')->get() : null;
         $localTime =  null;
         $timezone = null;
         
+        // n 1
+        // $booking = Booking::where('user_id',auth()->id())
+        // ->where('tariff_id',$selectedId)
+        // ->where('is_completed','0')
+        // ->orderBy('id','desc')->first(); //
+        
 
-        $booking = Booking::where('user_id',auth()->id())
-        ->where('tariff_id',$selectedId)
-        ->where('is_completed','0')
-        ->orderBy('id','desc')->first();
-        // Always pass both variables (tariffs may be null for steps > 1)
+        $personalInfoData[] = null;
+        if($step === 1){
+            if(session()->has('booking_id')){
+                $booking = booking::find(session('booking_id'));
+                [$countryCode, $numberOnly] = explode('-', $booking->phone, 2) + [null, null];
+                $countryISOCode = Country::where('dial_code', (int) $countryCode)->value('code');
+                $country = Country::find($booking->country);
+                $fullName = $booking->name;
+                $firstName = substr($fullName, 0, strrpos($fullName, ' '));
+                $firstName = $firstName ?: $fullName; 
+                $lastName = substr($fullName, strrpos($fullName, ' ') + 1);
+                $lastName = $lastName ?: $fullName; 
+                $dbValues = [
+                    'email' => $booking->email?? null,
+                    'phone' => $numberOnly?? null,
+                    'countryISOCode' => $countryISOCode?? null,
+                    'company' => $booking->company ?? null,
+                    'company_id' => $booking->company_id ?? null,
+                    'tax_vat_no' => $booking->tax_vat_no ?? null,
+                    'fname' => $firstName ?? null,
+                    'lname' => $lastName ?? null,
+                    'address' => $booking->address ?? null,
+                    'city' => $booking->city ?? null,
+                    'zip' => $booking->zip ?? null,
+                    'country' => $booking->country ?? null,
+                    'country_name' => $country->name,
+                ];
+                
+                $personalInfoData = array_merge(
+                [
+                    'email' => '',
+                    'phone' => '',
+                    'countryCode' => '',
+                    'company' => '',
+                    'company_id' => '',
+                    'tax_vat_no' => '',
+                    'fname' => '',
+                    'lname' => '',
+                    'address' => '',
+                    'city' => '',
+                    'zip' => '',
+                    'country' => '',
+                    'country_name' => '',
+                    ],
+                    $dbValues,
+                    old()
+                );
+            }else
+            {
+                $booking = null;
+            }
+        }
 
         $rewardData = [];
         if ($step === 3) {
             
-           if(isset($_GET['booking_id'])){
-                $bookingId = $_GET['booking_id'];
-                session(['booking_id' => $_GET['booking_id']]);
-           }
+        //    if(isset($_GET['booking_id'])){
+        //         $bookingId = $_GET['booking_id'];
+        //         session(['booking_id' => $_GET['booking_id']]);
+        //    }
+            $bookingId = session('booking_id');
             
             $dbReward = Reward::where('booking_id', $bookingId)->first();
             
-                $dbValues = [
-                    'reward_name' => $dbReward->name?? null,
-                    'reward_description' => $dbReward->description?? null,
-                    'reward_image' => $dbReward->image ?? null,
-                ];
+            $dbValues = [
+                'reward_name' => $dbReward->name?? null,
+                'reward_description' => $dbReward->description?? null,
+                'reward_image' => $dbReward->image ?? null,
+            ];
             
-
             $rewardData = array_merge(
                 [
                     'reward_name' => '',
@@ -413,15 +557,18 @@ class VotingController extends Controller
             );
         }
 
-      
-        if (($step === 4 || $step === 5) && $booking && $booking->country) {
-            $country = Country::find($booking->country);
-            if ($country && $country->code) {
+        
+        if (($step === 4 || $step === 6)) {
+            if (session()->has('booking_id')) {
+                $booking = Booking::find(session('booking_id')); 
+                $country = Country::find($booking->country);
+                if ($country && $country->code) {
                 $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
                 $timezone = $timezones[0] ?? 'UTC'; 
                 $dt = new \DateTime('now', new \DateTimeZone($timezone));
                 $gmtOffset = $dt->format('P'); 
                 $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
+            }
             }
         }
 
@@ -461,10 +608,14 @@ class VotingController extends Controller
             $votingData = array_merge($defaultVoting, $dbValues, $sessionVoting, old());
         }
 
-
-        // Get voting event for step 5
+        if($step === 5){
+            if(session()->has('booking_id')){
+            $booking = Booking::find(session('booking_id'));
+            }
+        }
+        // Get voting event for step 6
         $votingEvent = null;
-        if ($step === 5) {
+        if ($step === 6) {
             $existingEventId = session('voting.voting_event_id', null);
             if ($existingEventId) {
                 $votingEvent = VotingEvent::with('options')->find($existingEventId);
@@ -472,26 +623,30 @@ class VotingController extends Controller
             
             if (!$votingEvent && $booking) {
                 $votingEvent = VotingEvent::with('options')->where('booking_id', $booking->id)->first();
-            }
-            $country = Country::find( $booking->country);
-            
-            $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
-            $timezone = $timezones[0] ?? 'UTC'; 
-            $dt = new \DateTime('now', new \DateTimeZone($timezone));
-            $gmtOffset = $dt->format('P'); 
+                $country = Country::find( $booking->country);
+                $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+                $timezone = $timezones[0] ?? 'UTC'; 
+                $dt = new \DateTime('now', new \DateTimeZone($timezone));
+                $gmtOffset = $dt->format('P'); 
 
-            $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
+                $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
+            }
         }
         
 
-
+        // if($step === 1){
+        //     session()->forget('voting.selected_tariff');
+        // }
+        
+        
         return view('voting.step', [
             'currentStep' => $step,
             'stepNames' => $stepNames,
+            'personalInfoData' => $personalInfoData,
+            'countries'      => $countries,
             'tariffs' => $tariffs,
             'booking' => $booking,
             'selectedTariff' => $selectedTariff,
-            'countries'      => $countries,
             'rewardData'     => $rewardData,
             'votingData'     => $votingData,
             'votingEvent'    => $votingEvent,
@@ -507,8 +662,13 @@ class VotingController extends Controller
         ]);
 
         session(['voting.selected_tariff' => (int) $validated['tariff']]);
-
-        return redirect()->route('voting.create.step', ['step' => 2]);
+        if(session()->has('booking_id')){
+            $booking = Booking::find(session('booking_id'));
+            $booking->tariff_id = $validated['tariff'];
+            $booking->update();
+            echo 'updated';
+        }
+        return redirect()->route('voting.create.step', ['step' => 3]);
     }
 
     /**
@@ -755,7 +915,7 @@ class VotingController extends Controller
         }
 
         if (!empty($errors)) {
-            return redirect()->route('voting.create.step', ['step' => 5])
+            return redirect()->route('voting.create.step', ['step' => 6])
                 ->with('complete_errors', $errors)
                 ->with('error', 'Please resolve the issues before finishing.');
         }
@@ -765,6 +925,7 @@ class VotingController extends Controller
         $booking->save();
 
         session()->forget('booking_id');
+        session()->forget('issued_invoice');
         session()->forget('voting.voting_event_id');
         session()->forget('voting.selected_tariff');
 
