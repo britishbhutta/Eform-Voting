@@ -1,6 +1,6 @@
 {{-- resources/views/partials/details-form.blade.php --}}
 @php
-    $currentStep = $currentStep ?? 4;
+    $currentStep = $currentStep ?? 5;
 
     $prev = $currentStep - 1;
     $prevUrl = $prev >= 1
@@ -24,9 +24,9 @@
 <form class="details-form reward-form" method="POST" action="{{ route('voting.create.step', ['step' => $currentStep]) }}" enctype="multipart/form-data" novalidate>
     @csrf
 
-    @if($bookingId)
+    <!-- @if($bookingId)
         <input type="hidden" name="booking_id" value="{{ $bookingId }}">
-    @endif
+    @endif -->
 
     <div class="mb-3">
         <label for="form_name" class="form-label">Name of Voting Form*</label>

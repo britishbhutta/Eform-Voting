@@ -1,12 +1,13 @@
 {{-- resources/views/partials/voting-tabs.blade.php --}}
 @php
-    $currentStep = $currentStep ?? 1;
+    $currentStep = $currentStep ?? 2;
     $stepNames = $stepNames ?? [
-        1 => 'Choose Tariff',
-        2 => 'Personal Info & Payments',
+        1 => 'Personal Info',
+        2 => 'Choose Tariff',
         3 => 'Insert Reward',
         4 => 'Detail Of Event',
-        5 => 'Creation Of Form',
+        5 => 'Payment',
+        6 => 'Creation Of Form',
     ];
 
     $isCreateRoute = request()->routeIs('voting.create') || request()->routeIs('voting.create.step');
@@ -26,7 +27,8 @@
     {{-- Tabs --}}
     <ul class="voting-tabs">
         <li>
-            <a href="{{ route('voting.create.step', ['step' => 1] + (request()->query() ? request()->query() : [])) }}"
+            <!-- <a href="{{ route('voting.create.step', ['step' => 1] + (request()->query() ? request()->query() : [])) }}" -->
+            <a href="{{ route('create.new.voting.form') }}"
                class="tab-btn {{ $isCreateRoute ? 'active-tab' : '' }}">
                 Create A New Voting Form
             </a>

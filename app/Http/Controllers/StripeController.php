@@ -22,19 +22,8 @@ class StripeController extends Controller
     {
         $rules = [
             'stripeToken'   => 'required|string',
-            'selectedTariffId' => 'required|exists:tariffs,id',
+            // 'selectedTariffId' => 'required|exists:tariffs,id',
             // Billing info
-            'email'         => 'required|email',
-            'phone_number'  => 'nullable|string|max:20',
-            'company_name'  => 'required_if:invoice_issued,1|string|max:255',
-            'company_id'    => 'required_if:invoice_issued,1|string|max:255',
-            'tax_vat'       => 'nullable|string|max:50',
-            'fname'         => 'required|string|max:100',
-            'lname'         => 'required|string|max:100',
-            'address'       => 'required|string|max:255',
-            'city'          => 'required|string|max:100',
-            'zip'           => 'required|string|max:20',
-            'country'       => 'required|string',
             'cardholder_name' => 'required',
         ];
 
@@ -45,7 +34,7 @@ class StripeController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-
+       
         // Verify Cloudflare Turnstile
         $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
             'secret' => config('services.turnstile.secret_key'),
@@ -60,47 +49,29 @@ class StripeController extends Controller
             ], 422);
         }
         $validated = $validator->validated();
-        $country_id = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
-        $country = Country::find($country_id);
-        $selectedTariff = Tariff::find($request->selectedTariffId);
+        // $country_id = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
+        // $country = Country::find($country_id);
+        
+        if(session()->has('booking_id')){
+            $booking = Booking::find(session('booking_id'));
+        }
+        $selectedTariff = Tariff::find($booking->tariff_id);
 
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
         $charge = $stripe->charges->create([
             'amount' => $selectedTariff->price_cents,
             'currency' => $selectedTariff->currency,
             'source' => $request->stripeToken,
-            // 'billing_details' => [
-            //     'name' => $request->cardholder_name,
-            //     'address' => [
-            //             'line1' => '',
-            //             'postal_code' => '',
-            //             'country' => $country->name, 
-            //         ],
-            //     ],
         ]);
 
         $validated = $validator->validated();
-        $booking = new Booking;
-        $booking->tariff_id        = $request->selectedTariffId;
-        $booking->user_id          = auth()->id();
-
-        $booking->email            = $validated['email'];
-        $booking->phone            = $validated['phone_number'] ?? null;
-        $booking->company          = $validated['company_name'] ?? null;
-        $booking->company_id       = $validated['company_id'] ?? null;
-        $booking->tax_vat_no       = $validated['tax_vat'] ?? null;
-        $booking->name             = $validated['fname'] . ' ' . $validated['lname'];
-        $booking->address          = $validated['address'];
-        $booking->city             = $validated['city'];
-        $booking->zip              = $validated['zip'];
-        $booking->country          = $country_id;
-
-        $booking->booking_reference = strtoupper(uniqid('BOOK-'));
+        // $booking = new Booking;
+        // $booking->tariff_id        = $request->selectedTariffId;
+        // $booking->user_id          = auth()->id();
         $booking->price            = $selectedTariff->price_cents / 100;
         $booking->currency         = $selectedTariff->currency;
         $booking->transaction_id   = $charge->id;
         $booking->payment_status   = $charge->status;
-
         $booking->payment_method   = 'stripe';
         $booking->save();
 
@@ -130,8 +101,8 @@ class StripeController extends Controller
             'voting.selected_tariff' => $selectedTariff->id,
         ]);
 
-        $invoiceIssued = $request->boolean('invoice_issued');
-        if($invoiceIssued == '1'){
+        $invoiceIssued = session('issued_invoice');
+        if($invoiceIssued == 'true'){
             $user = Auth::user();
             Mail::to($booking->email)->send(new InvoiceIssueMail($user, $booking, $selectedTariff));
         }

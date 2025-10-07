@@ -11,7 +11,7 @@
 
     $backLabel = $prev >= 1 ? 'Back' : 'Cancel';
 
-    $bookingId = $booking->id ?? session('voting.booking_id') ?? old('booking_id') ?? request()->input('booking_id');
+    //$bookingId = $booking->id ?? session('voting.booking_id') ?? old('booking_id') ?? request()->input('booking_id');
 
 
     $rewardData = $rewardData ?? [];
@@ -23,9 +23,7 @@
     @csrf
 
    
-    @if($bookingId)
-        <input type="hidden" name="booking_id" value="{{ $bookingId }}">
-    @endif
+    
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

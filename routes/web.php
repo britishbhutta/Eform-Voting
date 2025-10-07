@@ -68,7 +68,7 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
     Route::match(['get', 'post'], '/voting/create/step/{step}', [VotingController::class, 'step'])
         ->whereNumber('step')
         ->name('voting.create.step');
-
+    Route::get('createNewVotingForm',[VotingController::class, 'createNewVotingForm'])->name('create.new.voting.form');
     // Realized votings list
     Route::get('/realized', [VotingController::class, 'realized'])->name('voting.realized');
 
@@ -86,15 +86,16 @@ Route::middleware(['auth', 'verified','role:2'])->group(function () {
     Route::post('/voting/complete', [VotingController::class, 'complete'])
         ->name('voting.complete');
 
-    Route::post('/voting/set/{id}', function ($id) {
-    return redirect()->route('voting.create.step', [
-        'step' => 3,
-        'booking_id' => $id
-            ]);
-        })->name('voting.set');
-        Route::get('/terms', function () {
-            return view('term-condition.terms-for-tariff-selection'); // resources/views/terms.blade.php
-        })->name('terms.show');
+    // Route::post('/voting/set/{id}', function ($id) {
+    // return redirect()->route('voting.create.step', [
+    //     'step' => 1,
+    //     'booking_id' => $id
+    //         ]);
+    //     })->name('voting.set');
+    Route::post('incompleteVotingForm/{id}', [VotingController::class, 'incompleteVotingForm'])->name('incomplete.voting.form');
+    Route::get('/terms', function () {
+        return view('term-condition.terms-for-tariff-selection'); // resources/views/terms.blade.php
+    })->name('terms.show');
     // CSV File For Voter Email
     Route::get('/export-voting-event-emails/{id}', [VotingController::class, 'exportVotingEventEmails'])->name('voting.event.emails');
     

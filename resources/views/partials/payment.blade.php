@@ -47,137 +47,15 @@
         <div class="payment-form-container" id="payment-form-wrapper">
             <div class="container mt-3">
                 <div id="payment-form-container">
-                    
-                        @csrf
-                        <input type="hidden" name="stripeToken" id="stripe-token">
-                        <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
-                        <input type="hidden" name="selectedTariffId" value="{{ $selectedTariff->id }}">
-                        <div class="row">
-                        <div class="col-md-6">
-                            <div class="card shadow-sm p-4">
-                            <h5 class="text-center mb-5">Billing information</h5>
-
-                            <!-- Email -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Email*</label>
-                                <div class="col-sm-9">
-                                <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
-                                </div>
-                            </div>
-
-                            <!-- Phone -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Phone Number</label>
-                                <div class="col-sm-9">
-                                    <input type="tel" id="phone" placeholder="" id="telephone" name="phone_number" class="form-control" inputmode="numeric" maxlength="15"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                        placeholder="Phone" style="width: 400px;">
-                                </div>
-                            </div>
-
-                            <!-- Invoice Checkbox (full width) -->
-                            <div class="row mb-2">
-                                <div class="col-sm-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="invoice_issued" id="invoiceCompany">
-                                        <label class="form-check-label" for="invoiceCompany">
-                                        Invoice issued to a company
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Company -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Company*</label>
-                                <div class="col-sm-9">
-                                    <input type="text" name="company_name" class="form-control" placeholder="Enter company name" required>
-                                </div>
-                            </div>
-
-                            <!-- Company ID -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Company ID*</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="company_id" class="form-control" placeholder="Enter company ID" required>
-                                </div>
-                            </div>
-
-                            <!-- Tax/VAT Number -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Tax/VAT Number</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="tax_vat" class="form-control" placeholder="Enter tax/VAT number">
-                                </div>
-                            </div>
-
-                            <!-- First Name -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">First Name</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="fname" class="form-control" placeholder="Enter first name">
-                                </div>
-                            </div>
-
-                            <!-- Last Name -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Last Name</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="lname" class="form-control" placeholder="Enter last name">
-                                </div>
-                            </div>
-
-                            <!-- Address -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">Address*</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="address" class="form-control" placeholder="Enter address" required>
-                                </div>
-                            </div>
-
-                            <!-- City -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">City*</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="city" class="form-control" placeholder="Enter city" required>
-                                </div>
-                            </div>
-
-                            <!-- ZIP -->
-                            <div class="row align-items-center mb-2">
-                                <label class="col-sm-3 col-form-label">ZIP*</label>
-                                <div class="col-sm-9">
-                                <input type="text" name="zip" class="form-control" placeholder="Enter ZIP code" required>
-                                </div>
-                            </div>
-
-                            <!-- Country -->
-                                <div class="row align-items-center mb-2">
-                                    <label class="col-sm-3 col-form-label">Country*</label>
-                                    <div class="col-sm-9">
-                                        <select name="country" id="country-select" class="form-control" required>
-                                            <option value="">{{ $countries->isEmpty() ? 'No countries available' : 'Select Country' }}</option>
-                                            @foreach($countries as $country)
-                                                <option value="{{ $country->id }} {{ $country->name }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
-                                                    {{ $country->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                    @csrf
+                    <input type="hidden" name="stripeToken" id="stripe-token">
+                    <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
+                    <!-- <input type="hidden" name="selectedTariffId" value="{{ $selectedTariff->id }}"> -->
+                    <div class="row justify-content-center">
                         <div class="col-md-6">
                             <div class="card shadow-sm p-4">
                                 <h5 class="text-center mb-4">Payment Method</h5>
-                                <!-- <div  id="card-element" class="form-control">
-                                    
-                                </div> -->
                                 <div class="container mt-4">
-                                    
-                                    
-
                                     <!-- Card Number -->
                                     <div class="mb-3">
                                     <label for="card-number-element" class="form-label">Card Number*</label>
@@ -215,14 +93,12 @@
                                     <div id="postalCode-error" class="text-danger small mt-1"></div>
                                     </div>
                                 </div>  
-                                
                                 <button type="button" id="btn-confirmation" class="btn btn-primary" data-bs-toggle="modal">
                                     Pay
                                 </button>    
                             </div>
                         </div>
-                        </div>
-                    
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,10 +155,10 @@
     <div class="d-flex justify-content-between mt-4">
 
         @php
-            $prev = ($currentStep ?? 2) - 1;
+            $prev = ($currentStep ?? 3) - 1;
             $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
     
-            $nextStep = ($currentStep ?? 2) + 1;
+            $nextStep = ($currentStep ?? 3) + 1;
             $nextBase = route('voting.create.step', ['step' => $nextStep]);
             $qs = request()->getQueryString();
             $nextUrl = $nextBase . ($qs ? ('?' . $qs) : '');
@@ -311,22 +187,7 @@
 
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
-
-
 <script type="text/javascript">
-
-    const input = document.querySelector("#phone");
-    const iti = window.intlTelInput(input, {
-        initialCountry: "auto",
-        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/utils.js" // ensure utils are loaded
-    });
-    fetch("https://ipapi.co/country/")
-    .then(res => res.text())
-    .then(countryCode => {
-        iti.setCountry(countryCode.toLowerCase());
-    })
-
     var stripe = Stripe('{{ env("STRIPE_KEY") }}');
     var elements = stripe.elements();
 
@@ -435,62 +296,11 @@
         const modal = new bootstrap.Modal(document.getElementById('paymentConfirmationModal'));
         modal.show();
     });
-
-        let shippingAddressElement = null;
-
-    $('#country-select').on('change', function () {
-        let selectedCountry = $(this).val();
-        let selectedCountryCode = selectedCountry.split(" ").slice(1).join(" "); 
-        if (!selectedCountry) {
-            return; 
-        }
-
-        // Create dropdown with only the selected country
-        let dropdownHtml = `
-            <label for="region-country" class="form-label">Country or Region</label>
-            <select id="region-country" name="country" class="form-select">
-                <option value="${selectedCountry}" selected>${selectedCountryCode}</option>
-            </select>
-        `;
-
-        // Inject into #region
-        $('#region').html(dropdownHtml);
-        
-        // if (shippingAddressElement) {
-        //     shippingAddressElement.unmount();
-        //     shippingAddressElement = null;
-        // }
-        // elements = stripe.elements();
-        
-        // shippingAddressElement = elements.create('address', {
-        //     mode: 'billing',
-        //     fields: {
-        //         country: 'always',   // show country
-        //     },
-        //     defaultValues: {
-        //         address: {
-        //             country: selectedCountryCode
-        //         }
-        //     }
-        // });
-
-        // shippingAddressElement.mount('#region');
-    });
-
     var nextUrl = @json($nextUrl);
     
     $(document).on('submit', '#stripe-form', function(e) {
     e.preventDefault();
      $("#btnCancel").prop("disabled", true);
-
-    let rawNumber   = input.value; 
-    if (rawNumber.startsWith("0")) {
-        rawNumber = rawNumber.substring(1);
-        } 
-    let countryCode = iti.getSelectedCountryData().dialCode;
-    console.log(rawNumber, countryCode);
-    $('#phone').val(countryCode + rawNumber);
-
 
     let form = $('#stripe-form');
     let submitBtn = form.find('button[type="submit"]');

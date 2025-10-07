@@ -27,10 +27,10 @@
 
 <div class="d-flex justify-content-between mt-4">
     @php
-        $prev = ($currentStep ?? 2) - 1;
+        $prev = ($currentStep ?? 3) - 1;
         $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
  
-        $nextStep = ($currentStep ?? 2) + 1;
+        $nextStep = ($currentStep ?? 3) + 1;
         $nextBase = route('voting.create.step', ['step' => $nextStep]);
         $qs = request()->getQueryString();
         $nextUrl = $nextBase . ($qs ? ('?' . $qs) : '');

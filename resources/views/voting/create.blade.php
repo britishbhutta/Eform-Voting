@@ -5,7 +5,7 @@
     @endpush
 
     @php
-        $currentStep = 1;
+        $currentStep = 2;
     @endphp
 
     <div class="container py-4">
@@ -78,7 +78,7 @@
 
             nextBtn.addEventListener('click', function () {
                 if (!selectedTariff) return;
-                const url = new URL("{{ route('voting.create.step', ['step' => 2]) }}", window.location.origin);
+                const url = new URL("{{ route('voting.create.step', ['step' => 3]) }}", window.location.origin);
                 url.search = window.location.search;
                 url.searchParams.set('tariff', selectedTariff);
                 window.location.href = url.toString();
