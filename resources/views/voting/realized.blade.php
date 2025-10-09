@@ -5,8 +5,8 @@
         <style>
             body { background-color: #f8f9fa; }
             .voting-card { max-width: 600px; margin: 2rem auto; }
-            .voting-header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
-            .success-icon { font-size: 4rem; color: #28a745; }
+            .voting-header { background: linear-gradient(135deg, #353e67 0%, #353e67 100%); color: white; }
+            .success-icon { font-size: 4rem; color: #353e67; }
         </style>
     @endpush
     @if(session('error'))
@@ -131,7 +131,7 @@
                                             <td>
                                                 <form action="{{ route('incomplete.voting.form', $booking->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-primary btn-sm">Incomplete</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm btn-blue">Incomplete</button>
                                                 </form>
                                             </td>
                                         @endif
@@ -230,7 +230,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                <a id="downloadQrBtn" class="btn btn-primary" download="voting-qr.png">Download PNG</a>
+                <a id="downloadQrBtn" class="btn btn-blue" download="voting-qr.png">Download PNG</a>
             </div>
         </div>
     </div>

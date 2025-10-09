@@ -18,8 +18,12 @@ use Illuminate\Support\Facades\Artisan;
 
 // Root: role chooser page (public)
 Route::get('/', function () {
-    return view('auth.choose-role');
+    return view('front-end.index');
 })->name('home');
+
+Route::get('/join', function () {
+    return view('auth.choose-role');
+})->name('join');
 
 // include Breeze / Fortify auth routes (login/register/password/etc.)
 require __DIR__ . '/auth.php';

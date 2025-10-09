@@ -1,0 +1,16 @@
+.footer {
+  bottom: 0;
+  width: 100%;
+}
+
+.footer-link {
+  color: #353e67;
+  font-size: 17px;
+  margin: 0 10px;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #353e67;
+}

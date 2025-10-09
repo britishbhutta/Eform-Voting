@@ -29,17 +29,17 @@
 }
 
 .tab-btn:hover {
-    color: #0b9b2a;
+    color: #353e67;
     background: #eef9f0;
     border-color: #cce3d1;
 }
 
 /* Active tab */
 .tab-btn.active-tab {
-    color: #0b9b2a;
+    color: #353e67;
     background: #ffffff;
     font-weight: 700;
-    border-color: #0b9b2a;
+    border-color: #353e67;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -79,7 +79,7 @@
     top: 18px;
     left: 6%;
     height: 6px;
-    background: #0b9b2a;
+    background: #353e67;
     border-radius: 6px;
     z-index: 0;
     transition: width 0.3s ease;
@@ -122,14 +122,14 @@
 }
 
 .progress-node.active .node-number {
-    background: #0b9b2a;
-    border-color: #0b9b2a;
+    background: #353e67;
+    border-color: #353e67;
     color: #fff;
     box-shadow: 0 6px 14px rgba(11, 155, 42, 0.15);
 }
 
 .progress-node.active .node-name {
-    color: #0b9b2a;
+    color: #353e67;
     font-weight: 600;
 }
 
@@ -207,7 +207,7 @@
 }
 
 .selectable-card.selected {
-    border-color: #0b9b2a;
+    border-color: #353e67;
     box-shadow: 0 14px 36px rgba(11, 155, 42, 0.12);
 }
 
@@ -256,8 +256,8 @@
 }
 
 .step-number-circle.active-step {
-    background: #0b9b2a; /* green background */
-    border-color: #0b9b2a;
+    background: #353e67; /* green background */
+    border-color: #353e67;
     color: #fff;
     box-shadow: 0 6px 14px rgba(11, 155, 42, 0.25);
 }
@@ -268,16 +268,16 @@
 
 /* When card is selected */
 .tariff-card.selected .select-btn {
-    background-color: #0b9b2a; /* green background */
+    background-color: #353e67; /* green background */
     color: #fff;
-    border-color: #0b9b2a;
+    border-color: #353e67;
     min-width: 160px; /* keep same width */
 }
 
 /* On hover when selected */
 .tariff-card.selected .select-btn:hover {
-    background-color: #098a25;
-    border-color: #098a25;
+    background-color: #353e67;
+    border-color: #353e67;
 }
 
 /* -------------------------
@@ -337,7 +337,7 @@ ensures intro looks good whether inside or outside the form */
     background: #fff;
 }
 .form-control:focus {
-    border-color: #0b9b2a;
+    border-color: #353e67;
     box-shadow: 0 0 0 0.15rem rgba(11, 155, 42, 0.08);
 }
 
@@ -363,7 +363,13 @@ input[type="time"] {
     border-radius: 8px;
 }
 .btn-success {
-    background: linear-gradient(90deg, #0b9b2a, #077e20);
+    background: linear-gradient(90deg, #353e67, #353e67);
+    color: #fff;
+    border: 0;
+    font-weight: 700;
+}
+.btn-blue {
+    background: linear-gradient(90deg, #353e67, #353e67);
     color: #fff;
     border: 0;
     font-weight: 700;
@@ -400,7 +406,7 @@ input[type="time"] {
    ------------------------- */
 
 .table-green thead th {
-    background: #0b9b2a;
+    background: #353e67;
     color: #fff;
 }
 
@@ -426,6 +432,6 @@ input[type="time"] {
 
 .captcha-success i {
     font-size: 48px;
-    color: #28a745;
+    color: #353e67;
     margin-bottom: 15px;
 }

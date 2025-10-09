@@ -2,6 +2,7 @@
     @push('styles')
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>.form-card{max-width:420px;margin:0 auto;} .form-card .card-body{padding:20px;}</style>
+        <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
     @endpush
 
     <div class="container form-card">
@@ -38,7 +39,7 @@
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">{{ __('Reset Password') }}</button>
+                        <button type="submit" class="btn btn-blue">{{ __('Reset Password') }}</button>
                     </div>
                 </form>
             </div>

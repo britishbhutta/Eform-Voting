@@ -3,7 +3,7 @@
  
     @if($selectedTariff)
         <div class="mb-3 text-center">
-            <p class="mb-0 text-success">
+            <p class="mb-0" style="color: #353e67;">
                 <strong>Selected tariff:</strong>  
                 {{ $selectedTariff->title }}  
                 ({{ number_format($selectedTariff->price_cents / 100, 2) }} {{ $selectedTariff->currency }})
@@ -27,7 +27,7 @@
                     <div id="qrcode" class="mt-3 d-inline-block"></div>
                     <div class="mt-3">
                         <div class="mt-2">
-                            <button class="btn btn-primary btn-sm" type="button" id="download-qr-btn">Download QR Code</button>
+                            <button class="btn btn-blue btn-sm" type="button" id="download-qr-btn">Download QR Code</button>
                         </div>
                         @php($publicUrl = route('voting.public', ['token' => $votingEvent->token]))
                         <div class="input-group input-group-sm mt-3" style="max-width: 100%;">

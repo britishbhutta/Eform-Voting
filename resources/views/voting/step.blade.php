@@ -16,6 +16,7 @@
                 }).showToast();
             });
         </script>
+        
     @endif
     @endpush
 
@@ -100,10 +101,28 @@
                     </form>
 
                     @elseif($currentStep === 3)
-                        {{-- STEP 4: Insert reward --}}
-                        @include('partials.reward-form', ['selectedTariff' => $selectedTariff ?? null])
+                        @if($booking->tariff_id == null)
+                            <div class="alert alert-warning mb-4">
+                                Please Select Tariff To Proceed.
+                            </div>
+                            <div class="d-flex justify-content-start">
+                                <a href="{{ route('voting.create.step', ['step' => 2]) }}" class="btn btn-light">Go back to Step 2</a>
+                            </div>
+                        @else
+                            {{-- STEP 4: Insert reward --}}
+                            @include('partials.reward-form', ['selectedTariff' => $selectedTariff ?? null])
+                        @endif
                     @elseif($currentStep === 4)
-                        @include('partials.details-form', ['selectedTariff' => $selectedTariff ?? null])
+                         @if($booking->tariff_id === null || is_null($rewardData))
+                            <div class="alert alert-warning mb-4">
+                                Please Complete Previous Steps to Proceed.
+                            </div>
+                            <div class="d-flex justify-content-start">
+                                <a href="{{ route('voting.create.step', ['step' => 1]) }}" class="btn btn-light">Go back to Step 1</a>
+                            </div>
+                        @else
+                            @include('partials.details-form', ['selectedTariff' => $selectedTariff ?? null])
+                        @endif
                     @elseif($currentStep === 5)
                         {{-- STEP 4: Insert reward --}}
                         @if($booking->payment_status == 'succeeded')
@@ -121,31 +140,44 @@
                             @endif
                         @endif
                     @else
+                        @if($booking->payment_status == 'succeeded')
+                            @include('partials.qr-code', ['booking' => $booking ?? null])
 
-                        @include('partials.qr-code', ['booking' => $booking ?? null])
+                            @if(session('complete_errors'))
+                                <div class="alert alert-danger mt-3">
+                                    <div class="fw-bold mb-2">Please resolve the following before finishing:</div>
+                                    <ul class="mb-0">
+                                        @foreach((array) session('complete_errors') as $msg)
+                                            <li>{{ $msg }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
 
-                        @if(session('complete_errors'))
-                            <div class="alert alert-danger mt-3">
-                                <div class="fw-bold mb-2">Please resolve the following before finishing:</div>
-                                <ul class="mb-0">
-                                    @foreach((array) session('complete_errors') as $msg)
-                                        <li>{{ $msg }}</li>
-                                    @endforeach
-                                </ul>
+                            
+                            {{-- Wizard actions area --}}
+                            <div class="d-flex justify-content-between mt-4">
+                                {{-- Back link --}}
+                                @php
+                                    $prev = $currentStep - 1;
+                                    $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
+                                @endphp
+                                <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
+                                <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#finishOverviewModal">Finish</button> -->
+                                <form method="POST" action="{{ route('voting.complete') }}">
+                                    @csrf
+                                    <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                                    <button type="submit" class="btn btn-success">Finish</button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="alert alert-warning mb-4">
+                                Please Complete Previous Steps to Proceed.
+                            </div>
+                            <div class="d-flex justify-content-start">
+                                <a href="{{ route('voting.create.step', ['step' => 1]) }}" class="btn btn-light">Go back to Step 1</a>
                             </div>
                         @endif
-
-                        
-                        {{-- Wizard actions area --}}
-                        <div class="d-flex justify-content-between mt-4">
-                            {{-- Back link --}}
-                            @php
-                                $prev = $currentStep - 1;
-                                $prevUrl = $prev >= 1 ? route('voting.create.step', ['step' => $prev]) : route('voting.realized');
-                            @endphp
-                            <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#finishOverviewModal">Finish</button>
-                        </div>
                     @endif
                 @endif
             </div>
@@ -157,7 +189,7 @@
         @endif
     </div>
 
-    @if($currentStep === 6)
+    <!-- @if($currentStep === 6)
         <div class="modal fade" id="finishOverviewModal" tabindex="-1" aria-labelledby="finishOverviewLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
@@ -235,115 +267,116 @@
                 </div>
             </div>
         </div>
-    @endif
+    @endif -->
 
     @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const currentStep = Number(@json($currentStep));
-            document.querySelectorAll('.progress-node').forEach(function (node) {
-                const step = Number(node.getAttribute('data-step'));
-                if (step <= currentStep) {
-                    node.classList.add('active');
-                } else {
-                    node.classList.remove('active');
-                }
-            });
- 
-            if (currentStep === 2) {
-                const cards = document.querySelectorAll('.selectable-card');
-                const nextBtn = document.getElementById('wizardNextBtn');
-                const selectedInfo = document.querySelector('.selected-info');
-                const selectedInfoTariff = document.querySelector('.selected-info-tariff');
-                const selectedInput = document.getElementById('selectedTariffInput');
-                const termsCheckbox = document.getElementById('termsCheckbox');
-                let selectedTariffId = @json($selectedTariff ? $selectedTariff->id : '');
-
-                // Enable Next only when tariff + checkbox are valid
-                function updateNextButtonState() {
-                    if (selectedTariffId && (!termsCheckbox || termsCheckbox.checked)) {
-                        nextBtn.disabled = false;
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const currentStep = Number(@json($currentStep));
+                document.querySelectorAll('.progress-node').forEach(function (node) {
+                    const step = Number(node.getAttribute('data-step'));
+                    if (step <= currentStep) {
+                        node.classList.add('active');
                     } else {
-                        nextBtn.disabled = true;
-                    }
-                }
-
-                function setSelected(cardEl) {
-                    cards.forEach(c => c.classList.remove('selected'));
-                    cardEl.classList.add('selected');
-                    selectedTariffId = cardEl.getAttribute('data-tariff-id');
-                    const header = cardEl.querySelector('.card-header strong');
-                    const title = header ? header.innerText : 'Tariff';
-
-                    let isPaid = @json($booking && $booking->payment_status === 'succeeded');
-
-                    // Inject checkbox into DOM
-                    selectedInfo.innerHTML = `
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="termsCheckbox" ${isPaid ? 'checked' : ''}>
-                            <label class="form-check-label" for="termsCheckbox">
-                                I agree to the <a href="{{ route('terms.show') }}" target="_blank">Terms & Conditions</a>
-                            </label>
-                        </div>
-                    `;
-                    selectedInfoTariff.innerHTML = `
-                    <strong>Selected: </strong> ${title} 
-                    `;
-                    selectedInput.value = selectedTariffId;
-
-                    // Get new checkbox
-                    const newCheckbox = document.getElementById('termsCheckbox');
-
-                    if (isPaid) {
-                        nextBtn.disabled = false;
-                        if (newCheckbox) {
-                            newCheckbox.disabled = true; 
-                        }
-                    } else {
-                        nextBtn.disabled = true;
-                        if (newCheckbox) {
-                            newCheckbox.addEventListener('change', function () {
-                                nextBtn.disabled = !this.checked;
-                            });
-                        }
-                    }
-                }
-
-                cards.forEach(card => {
-                    card.addEventListener('click', function () {
-                        setSelected(this);
-                    });
-                    card.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setSelected(this);
-                        }
-                    });
-                    const btn = card.querySelector('.select-btn');
-                    if (btn) {
-                        btn.addEventListener('click', function (ev) {
-                            ev.stopPropagation();
-                            setSelected(card);
-                        });
+                        node.classList.remove('active');
                     }
                 });
+    
+                if (currentStep === 2) {
+                    const cards = document.querySelectorAll('.selectable-card');
+                    const nextBtn = document.getElementById('wizardNextBtn');
+                    const selectedInfo = document.querySelector('.selected-info');
+                    const selectedInfoTariff = document.querySelector('.selected-info-tariff');
+                    const selectedInput = document.getElementById('selectedTariffInput');
+                    const termsCheckbox = document.getElementById('termsCheckbox');
+                    let selectedTariffId = @json($selectedTariff ? $selectedTariff->id : '');
 
-                // Attach listener if checkbox already in DOM
-                if (termsCheckbox) {
-                    termsCheckbox.addEventListener('change', updateNextButtonState);
-                }
-
-                // Initialize state if already selected
-                if (selectedTariffId) {
-                    const initialCard = [...cards].find(c => c.getAttribute('data-tariff-id') === selectedTariffId.toString());
-                    if (initialCard) {
-                        setSelected(initialCard);
+                    // Enable Next only when tariff + checkbox are valid
+                    function updateNextButtonState() {
+                        if (selectedTariffId && (!termsCheckbox || termsCheckbox.checked)) {
+                            nextBtn.disabled = false;
+                        } else {
+                            nextBtn.disabled = true;
+                        }
                     }
-                } else {
-                    updateNextButtonState();
+
+                    function setSelected(cardEl) {
+                        cards.forEach(c => c.classList.remove('selected'));
+                        cardEl.classList.add('selected');
+                        selectedTariffId = cardEl.getAttribute('data-tariff-id');
+                        const header = cardEl.querySelector('.card-header strong');
+                        const title = header ? header.innerText : 'Tariff';
+
+                        let isPaid = @json($booking && $booking->payment_status === 'succeeded');
+
+                        // Inject checkbox into DOM
+                        selectedInfo.innerHTML = `
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="termsCheckbox" ${isPaid ? 'checked' : ''}>
+                                <label class="form-check-label" for="termsCheckbox">
+                                    I agree to the <a href="{{ route('terms.show') }}" target="_blank">Terms & Conditions</a>
+                                </label>
+                            </div>
+                        `;
+                        selectedInfoTariff.innerHTML = `
+                        <strong>Selected: </strong> ${title} 
+                        `;
+                        selectedInput.value = selectedTariffId;
+
+                        // Get new checkbox
+                        const newCheckbox = document.getElementById('termsCheckbox');
+
+                        if (isPaid) {
+                            nextBtn.disabled = false;
+                            if (newCheckbox) {
+                                newCheckbox.disabled = true; 
+                            }
+                        } else {
+                            nextBtn.disabled = true;
+                            if (newCheckbox) {
+                                newCheckbox.addEventListener('change', function () {
+                                    nextBtn.disabled = !this.checked;
+                                });
+                            }
+                        }
+                    }
+
+                    cards.forEach(card => {
+                        card.addEventListener('click', function () {
+                            setSelected(this);
+                        });
+                        card.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setSelected(this);
+                            }
+                        });
+                        const btn = card.querySelector('.select-btn');
+                        if (btn) {
+                            btn.addEventListener('click', function (ev) {
+                                ev.stopPropagation();
+                                setSelected(card);
+                            });
+                        }
+                    });
+
+                    // Attach listener if checkbox already in DOM
+                    if (termsCheckbox) {
+                        termsCheckbox.addEventListener('change', updateNextButtonState);
+                    }
+
+                    // Initialize state if already selected
+                    if (selectedTariffId) {
+                        const initialCard = [...cards].find(c => c.getAttribute('data-tariff-id') === selectedTariffId.toString());
+                        if (initialCard) {
+                            setSelected(initialCard);
+                        }
+                    } else {
+                        updateNextButtonState();
+                    }
                 }
-            }
-        });
-    </script>
+            });
+        </script>
     @endpush
 </x-app-layout>

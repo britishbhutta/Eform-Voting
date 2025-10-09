@@ -93,7 +93,7 @@
                                     <div id="postalCode-error" class="text-danger small mt-1"></div>
                                     </div>
                                 </div>  
-                                <button type="button" id="btn-confirmation" class="btn btn-primary" data-bs-toggle="modal">
+                                <button type="button" id="btn-confirmation" class="btn btn-blue" data-bs-toggle="modal">
                                     Pay
                                 </button>    
                             </div>
@@ -118,7 +118,7 @@
 
                         <div class="p-4 border rounded-3 bg-light shadow-sm mb-4">
                             <div class="fw-semibold fs-5 mb-1">{{ $selectedTariff->title }}</div>
-                            <div class="fs-4 text-success fw-bold">
+                            <div class="fs-4 fw-bold" style="color: #353e67;">
                                 {{ number_format($selectedTariff->price_cents / 100, 2) }} {{ $selectedTariff->currency }}
                             </div>
                         </div>
@@ -130,7 +130,7 @@
 
                     <!-- Modal footer -->
                     <div class="modal-footer d-flex justify-content-between">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-blue">
                             Pay Now
                         </button>
                         <button id="btnCancel" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
