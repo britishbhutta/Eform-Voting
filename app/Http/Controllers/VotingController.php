@@ -168,15 +168,15 @@ class VotingController extends Controller
                         ->withInput();
                 }
                 
-                if($request['invoice_issued'] == true)
-                {   
-                    session(['issued_invoice' => 'true']);
-                }else
-                {
-                    if(session('issued_invoice')){
-                        session()->forget('issued_invoice');
-                    }
-                }
+                // if($request['invoice_issued'] == true)
+                // {   
+                //     session(['issued_invoice' => 'true']);
+                // }else
+                // {
+                //     if(session('issued_invoice')){
+                //         session()->forget('issued_invoice');
+                //     }
+                // }
                 $validated = $validator->validated();
                 $country_id = (int) filter_var($validated['country'], FILTER_SANITIZE_NUMBER_INT);
                 $fullName = $validated['fname'] . ' ' . $validated['lname'];
@@ -192,6 +192,19 @@ class VotingController extends Controller
                     'zip'           => $validated['zip'],
                     'country'       => $country_id,
                 ];
+                
+                // Conditionally add extras to draft
+                if ($request->boolean('invoice_issue')) {
+                    $bookingDraft['invoice_issue'] = '1';
+                }else{
+                    $bookingDraft['invoice_issue'] = '0';
+                }
+                if ($request->boolean('remember_me')) {
+                    $bookingDraft['remember_me'] = '1';
+                }else{
+                    $bookingDraft['remember_me'] = '0';
+                }
+                
 
                 $payload = [
                     'email'         => $bookingDraft['email'],
@@ -207,6 +220,18 @@ class VotingController extends Controller
                     'booking_reference' => strtoupper(uniqid('BOOK-')),
                     'user_id'           => auth()->id(),   
                 ];
+                // Conditionally add extras to payload too
+                if ($request->boolean('invoice_issue')) {
+                    $payload['invoice_issue'] = '1';
+                }else{
+                    $payload['invoice_issue'] = '0';
+                }
+                if ($request->boolean('remember_me')) {
+                    $payload['remember_me'] = '1';
+                }else{
+                    $payload['remember_me'] = '0';
+                }
+                
                 if (session()->has('booking_id')) {
                     $bookingId = session('booking_id');
                 }else{
@@ -450,10 +475,26 @@ class VotingController extends Controller
                     session(['voting.voting_event_id' => $votingEvent->id]);
                     if ($bookingId) session(['voting.booking_id' => $bookingId]);
 
-                    DB::commit();
+                    $booking = Booking::find(session('booking_id'));
+                    $country = Country::find( $booking->country);
+                    $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $country->code);
+                    $timezone = $timezones[0] ?? 'UTC'; 
+                    $dt = new \DateTime('now', new \DateTimeZone($timezone));
+                    $gmtOffset = $dt->format('P'); 
+                    $localTime = ' — '. $country->name . ' ( ' . $timezone . ' , GMT ' . $gmtOffset . ' )';
 
-                    return redirect()->route('voting.create.step', ['step' => 5])
-                        ->with('success', 'Voting event saved successfully.');
+                    DB::commit();
+                    $votingEvent->load('options');
+                    return response()->json([
+                        'status'   => 'success',
+                        'message'  => 'Form submitted successfully!',
+                        'votingEvent' => $votingEvent,
+                        'start_at' => \Carbon\Carbon::parse($votingEvent->start_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T'),
+                        'end_at'   => \Carbon\Carbon::parse($votingEvent->end_at)->setTimezone($timezone ?? config('app.timezone'))->format('M d, Y H:i T') ,
+                        'localTime' => $localTime
+                    ]);
+                    // return redirect()->route('voting.create.step', ['step' => 4])
+                    //     ->with('success', 'Voting event saved successfully.');
                 } catch (\Throwable $e) {
                     DB::rollBack();
                     Log::error('Failed to save voting event: ' . $e->getMessage());
@@ -500,7 +541,9 @@ class VotingController extends Controller
                     'city' => $booking->city ?? null,
                     'zip' => $booking->zip ?? null,
                     'country' => $booking->country ?? null,
-                    'country_name' => $country->name,
+                    'country_name' => $country->name ?? null,
+                    'invoice_issue' => $booking->invoice_issue ?? null,
+                    'remember_me' => $booking->remember_me ?? null,
                 ];
                 
                 $personalInfoData = array_merge(
@@ -518,6 +561,8 @@ class VotingController extends Controller
                     'zip' => '',
                     'country' => '',
                     'country_name' => '',
+                    'invoice_issue' => '',
+                    'remember_me' => '',
                     ],
                     $dbValues,
                     old()
@@ -581,9 +626,10 @@ class VotingController extends Controller
             if (session()->has('booking_id')) {
                 $bookingId = session('booking_id');
             }
-
+            
             if ($bookingId) {
                 $dbVoting = VotingEvent::with('options')->where('booking_id' ,$bookingId)->first();
+                 $rewardData = Reward::where('booking_id', $bookingId)->first();
             }
 
             $defaultVoting = [
@@ -606,6 +652,7 @@ class VotingController extends Controller
             }
 
             $votingData = array_merge($defaultVoting, $dbValues, $sessionVoting, old());
+            
         }
 
         if($step === 5){
@@ -925,7 +972,6 @@ class VotingController extends Controller
         $booking->save();
 
         session()->forget('booking_id');
-        session()->forget('issued_invoice');
         session()->forget('voting.voting_event_id');
         session()->forget('voting.selected_tariff');
 

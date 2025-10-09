@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('tariff_id');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('company')->nullable();
@@ -30,8 +31,19 @@ return new class extends Migration
             $table->string('transaction_id')->nullable();
             $table->string('payment_status')->nullable();
             $table->string('payment_method')->nullable();
+            $table->string('booking_status')->nullable();
+            $table->enum('is_completed', [0, 1])
+            ->default(0)
+            ->comment('0 = In Completed, 1 = Completed');
+            $table->enum('invoice_issue', [0, 1])
+            ->default(0)
+            ->comment('0 = Not Issue, 1 = Issued');
+            $table->enum('remember_me', [0, 1])
+            ->default(0)
+            ->comment('0 = Not Remember, 1 = Remembered');
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('tariff_id')->references('id')->on('tariffs')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

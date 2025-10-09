@@ -27,6 +27,8 @@ class Booking extends Model
         'payment_method',
         'is_completed',
         'booking_status',
+        'invoice_issue',
+        'remember_me',
     ];
 
     public function user()

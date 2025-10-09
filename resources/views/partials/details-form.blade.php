@@ -85,78 +85,83 @@
     <div class="d-flex justify-content-between mt-4">
         <a href="{{ $prevUrl }}" class="btn btn-light">{{ $prev >= 1 ? 'Back' : 'Cancel' }}</a>
 
-        <button type="submit" id="detailsNextBtn" class="btn btn-success">Save & Next</button>
+        <button type="submit" id="detailsNextBtn" class="btn btn-success">Save</button>
     </div>
 </form>
+<!-- Confirmation Modal -->
+<div class="modal fade" id="finishOverviewModal" tabindex="-1" aria-labelledby="finishOverviewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="finishOverviewLabel">Review your voting setup</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6>1) Tariff</h6>
+                    <div>{{ $selectedTariff?->title ?? '-' }} — {{ $selectedTariff ? number_format($selectedTariff->price_cents/100,2) . ' ' . $selectedTariff->currency : '' }}</div>
+                </div>
+                <div class="mb-3">
+                    <h6>2) Billing / Booking</h6>
+                    @if(!empty($booking))
+                        <div class="small">
+                            <div><strong>Name:</strong> {{ $booking->name ?? '-' }}</div>
+                            <div><strong>Email:</strong> {{ $booking->email ?? '-' }}</div>
+                            <div><strong>Address:</strong> {{ $booking->address ?? '-' }}, {{ $booking->city ?? '-' }} {{ $booking->zip ?? '' }}</div>
+                            <div><strong>Country:</strong> {{ $booking->country ?? '-' }}</div>
+                            <div><strong>Reference:</strong> {{ $booking->booking_reference ?? '-' }}</div>
+                        </div>
+                    @else
+                        <div class="text-danger">No booking found.</div>
+                    @endif
+                </div>
+                <div class="mb-3">
+                    <h6>3) Reward</h6>
+                    @php $reward = $booking?->reward; @endphp
+                    <div class="small">
+                        <div><strong>Name:</strong> {{ $reward->name ?? '-' }}</div>
+                        <div><strong>Description:</strong> {{ $reward->description ?? '-' }}</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6>4) Voting Event</h6>
+                    @php $overviewEvent = isset($votingEvent) ? $votingEvent : (isset($booking) ? \App\Models\VotingEvent::with('options')->where('booking_id', $booking->id)->first() : null); @endphp
+                    <div class="small" id="modal-form-detail">
+                        <div><strong>Title:</strong> {{ $overviewEvent?->title ?? '-' }}</div>
+                        <div><strong>Question:</strong> {{ $overviewEvent?->question ?? '-' }}</div>
+
+
+                        
+                        <div><strong>Options:</strong>
+                            @if($overviewEvent && $overviewEvent->options->isNotEmpty())
+                                <ul class="mb-0">
+                                    @foreach($overviewEvent->options as $opt)
+                                        <li>{{ $opt->option_text }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <h6>5) QR Code</h6>
+                    <div class="small">Your QR Code would generate after the Payment.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                @if(!empty($booking))
+                    <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                    <a href="{{ route('voting.create.step', ['step' => 5]) }}" type="submit" class="btn btn-success">Confirm & Next</a>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+  
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('.details-form');
-
-    if (form) {
-        form.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-                e.preventDefault();
-            }
-        });
-    }
-
-    form.addEventListener('submit', function (e) {
-        const name = document.getElementById('form_name').value.trim();
-        const start = document.getElementById('start_at').value;
-        const end = document.getElementById('end_at').value;
-        const question = document.getElementById('question').value.trim();
-
-        const optionInputs = Array.from(document.querySelectorAll('#optionsList input[name="options[]"]'));
-        const optionsValues = optionInputs.map(i => i.value.trim());
-
-        ['form_name','start_at','end_at','question'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.classList.remove('is-invalid');
-        });
-        optionInputs.forEach(i => i.classList.remove('is-invalid'));
-
-        const errors = [];
-        if (!name) { errors.push('Please enter the form name'); document.getElementById('form_name').classList.add('is-invalid'); }
-        if (!start) { errors.push('Please select voting start date & time'); document.getElementById('start_at').classList.add('is-invalid'); }
-        if (!end) { errors.push('Please select voting end date & time'); document.getElementById('end_at').classList.add('is-invalid'); }
-        if (start && end && (new Date(start) >= new Date(end))) { errors.push('End time must be after start time'); document.getElementById('end_at').classList.add('is-invalid'); }
-        if (!question) { errors.push('Please enter the voting question'); document.getElementById('question').classList.add('is-invalid'); }
-
-        const filledOptions = optionsValues.filter(v => v.length > 0);
-        if (filledOptions.length < 2) {
-            errors.push('Please provide at least two answer options (Option 1 and 2 at minimum)');
-
-            if (optionInputs[0]) optionInputs[0].classList.add('is-invalid');
-            if (optionInputs[1]) optionInputs[1].classList.add('is-invalid');
-        }
-
-        if (errors.length) {
-            e.preventDefault();
-            alert(errors[0]);
-            return;
-        }
-    });
-
-    let optionCount = document.querySelectorAll('#optionsList input[name="options[]"]').length || 4;
-
-    document.getElementById("addOptionBtn").addEventListener("click", function () {
-        optionCount++;
-        const optionsList = document.getElementById("optionsList");
-
-        const newOption = document.createElement("div");
-        newOption.classList.add("option-item", "mb-2");
-
-        newOption.innerHTML = `
-            <input type="text" class="form-control"
-                   id="option${optionCount}"
-                   name="options[]"
-                   placeholder="Option ${optionCount}">
-        `;
-
-        optionsList.appendChild(newOption);
-    });
-});
-</script>
+    <script src="{{asset('/')}}js/step4-ajax.js"></script>
 @endpush

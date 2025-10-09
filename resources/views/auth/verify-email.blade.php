@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="d-grid mb-2">
-                        <button type="submit" class="btn btn-primary">Verify</button>
+                        <button type="submit" class="btn btn-blue">Verify</button>
                     </div>
                 </form>
 

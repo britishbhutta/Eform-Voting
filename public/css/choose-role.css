@@ -51,7 +51,7 @@
     align-items: center;
     justify-content: center;
     background: #f6f8fa;
-    color: #0b9b2a;
+    color: #353e67;
 }
 
 /* text */
@@ -96,7 +96,7 @@
 
 /* selected state */
 .role-card.selected {
-    border-color: #0b9b2a;
+    border-color: #353e67;
     background: linear-gradient(
         180deg,
         rgba(11, 155, 42, 0.03),
@@ -106,16 +106,16 @@
     transform: translateY(-4px);
 }
 .role-card.selected .radio-outer {
-    border-color: #0b9b2a;
+    border-color: #353e67;
 }
 .role-card.selected .radio-inner {
-    background: #0b9b2a;
+    background: #353e67;
 }
 
 /* CTA */
 .btn-join {
-    background: #0b9b2a;
-    border-color: #0b9b2a;
+    background: #353e67;
+    border-color: #353e67;
     color: #fff;
     font-weight: 700;
     border-radius: 8px;
@@ -123,8 +123,8 @@
     box-shadow: 0 10px 28px rgba(11, 155, 42, 0.08);
 }
 .btn-join:hover {
-    background: #0a8b22;
-    border-color: #0a8b22;
+    background: #353e67;
+    border-color: #353e67;
 }
 
 /* small screens — column layout */

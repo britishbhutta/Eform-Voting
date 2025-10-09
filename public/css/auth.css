@@ -1,6 +1,28 @@
 /* auth.css - used by login/register pages */
 
 /* ---------- base layout (login default) ---------- */
+.btn-outline-secondary {
+    color: #353e67;            /* text color */
+    border-color: #353e67;     /* border color */
+}
+.btn-outline-secondary:hover {
+    background-color: #353e67; /* hover bg */
+    color: #fff;               /* hover text */
+}
+.btn-outline-primary {
+    color: #353e67;            /* text color */
+    border-color: #353e67;     /* border color */
+}
+.btn-outline-primary:hover {
+    background-color: #353e67; /* hover bg */
+    color: #fff;               /* hover text */
+}
+.btn-blue {
+    background: linear-gradient(90deg, #353e67, #353e67);
+    color: #fff;
+    border: 0;
+    font-weight: 700;
+}
 .form-card {
     max-width: 420px;
     margin: 0 auto;
@@ -54,8 +76,8 @@ a.link-underline-hover:hover {
     text-decoration: none;
     display: inline-block;
     font-weight: 600;
-    border-color: #0b84ff;
-    color: #0b84ff;
+    border-color: #353e67;
+    color: #353e67;
 }
 
 /* Google button style (consistent look across login & register)
@@ -70,8 +92,8 @@ a.link-underline-hover:hover {
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     color: #fff;
-    background-color: #0b84ff;
-    border-color: #0b84ff;
+    background-color: #353e67;
+    border-color: #353e67;
 }
 .btn-google .btn-google-icon,
 .btn-google-icon {
@@ -81,8 +103,8 @@ a.link-underline-hover:hover {
 
 /* Button used on register form (primary create account button) */
 .btn-create {
-    background: #0b8b19;
-    border: 1px solid #0b8b19;
+    background: #353e67;
+    border: 1px solid #353e67;
     color: #fff;
     display: inline-block;
     padding: 0.375rem 0.75rem;
@@ -91,7 +113,7 @@ a.link-underline-hover:hover {
 }
 .btn-create:hover,
 .btn-create:focus {
-    background: #0b8b19;
+    background: #353e67;
     color: #fff;
     box-shadow: none;
 }

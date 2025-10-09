@@ -65,9 +65,14 @@
                     <div class="row mb-2">
                         <div class="col-sm-12">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="invoice_issued" id="invoiceCompany" {{ session('issued_invoice') ? 'checked' : '' }}>
+                                <input class="form-check-input"
+                                    type="checkbox"
+                                    name="invoice_issue"
+                                    id="invoiceCompany"
+                                    @if(($personalInfoData['invoice_issue'] ?? 0) == 1) checked @endif>
+
                                 <label class="form-check-label" for="invoiceCompany">
-                                Invoice issued to a company
+                                    Invoice issued to a company 
                                 </label>
                             </div>
                         </div>
@@ -170,6 +175,17 @@
                             </select>
                             <div class="invalid-feedback">Please Select Country.</div>
                         </div>
+                    </div>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input"
+                            type="checkbox"
+                            id="rememberMe"
+                            name="remember_me"
+                            @if(($personalInfoData['remember_me'] ?? 0) == 1) checked @endif>
+
+                        <label class="form-check-label" for="rememberMe">
+                            Remember me 
+                        </label>
                     </div>
                 </form>
             </div>

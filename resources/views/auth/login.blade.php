@@ -125,7 +125,7 @@
 
                                 <!-- Submit -->
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">Log in</button>
+                                    <button type="submit" class="btn btn-blue">Log in</button>
                                 </div>
 
                                 <!-- OR divider -->

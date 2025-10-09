@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('code', 5)->nullable();
+            $table->integer('dial_code', 5)->nullable();
             $table->boolean('status')->default(true); // true = active
             $table->timestamps();
         });

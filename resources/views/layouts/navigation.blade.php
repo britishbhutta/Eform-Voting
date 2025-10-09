@@ -1,9 +1,13 @@
 <nav class="bg-white border-bottom">
     <div class="container d-flex justify-content-between align-items-center py-2">
         @if(Auth::check() && Auth::user()->role == '2')
-            <a href="{{ route('dashboard') }}" class="h5 mb-0 text-decoration-none">{{ config('app.name', 'eform') }}</a>
+            <a href="{{ route('dashboard') }}" class="h5 mb-0 text-decoration-none">
+                <img class="evoting-logo" src="{{ asset('images/LOGO-GIF-FV.gif') }}" alt="Evoting Logo">
+            </a>
         @else
-            <a href="{{ route('voterHistory') }}" class="h5 mb-0 text-decoration-none">{{ config('app.name', 'eform') }}</a>
+            <a href="{{ route('voterHistory') }}" class="h5 mb-0 text-decoration-none">
+                <img class="evoting-logo" src="{{ asset('images/LOGO-GIF-FV.gif') }}" alt="Evoting Logo">
+            </a>
         @endif
 
         <!-- <div class="d-none d-sm-flex align-items-center gap-3">

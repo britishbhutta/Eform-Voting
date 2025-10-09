@@ -26,6 +26,11 @@
             body { font-family: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; }
             .min-h-screen { min-height: 100vh; }
             .bg-gray-100 { background: #f3f4f6; }
+            .evoting-logo{
+                height: 70px;  
+                width: auto;    
+                max-width: 200px; 
+            }
         </style>
     </head>
     <body>
